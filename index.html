@@ -170,7 +170,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
 </head>
 <body>
 
-    <div id="admin-key-gate"><div><h3 style="color:#5df7ff;margin-top:0">🔐 ADMIN KEY</h3><p style="font-size:13px;color:#c5d6e4">해금 키 <b>D</b>를 입력하세요.</p><input id="admin-key-input" type="text" maxlength="1" autocapitalize="characters" autocomplete="off" aria-label="관리자 해금 키" style="width:100%;box-sizing:border-box;padding:12px;background:#07101a;color:white;border:1px solid #426070;border-radius:7px;font-size:18px;text-align:center"><div class="admin-row"><button class="dev-btn" onclick="submitAdminKey()">확인</button><button class="dev-btn" onclick="cancelAdminKey()">취소</button></div></div></div>
+    <div id="admin-key-gate"><div><h3 style="color:#5df7ff;margin-top:0">🔐 ADMIN KEY</h3><p style="font-size:13px;color:#c5d6e4">해금 키 <b>D</b>를 입력하세요.</p><input id="admin-key-input" type="text" inputmode="text" maxlength="1" autocapitalize="characters" autocomplete="off" enterkeyhint="go" aria-label="관리자 해금 키" style="width:100%;box-sizing:border-box;padding:12px;background:#07101a;color:white;border:1px solid #426070;border-radius:7px;font-size:18px;text-align:center"><div class="admin-row"><button class="dev-btn" onclick="submitAdminKey()">확인</button><button class="dev-btn" onclick="cancelAdminKey()">취소</button></div></div></div>
     <div id="dev-panel">
         <h3>🛠️ MASTER DEBUG CONSOLE</h3>
         <div class="admin-section"><strong>자원 제어</strong>
@@ -473,29 +473,42 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             showAlert('🔓 ADMIN TOOL 활성화');
         }
         function cancelAdminKey(){adminAwaitingKey=false;document.getElementById('admin-key-gate').style.display='none';document.getElementById('admin-key-input').value='';}
+        // 관리자 도구는 시작 화면에서 열어도 게임 루프가 정상 작동하도록 준비한다.
+        function adminEnsureGameActive(){
+            if(gameActive) return;
+            document.getElementById('start-screen').style.display='none';
+            gameActive=true;
+            updateStat();
+            updateShopUI();
+            switchBGM(audioCtx.bgmBattle);
+            draw();
+        }
         function adminSetResources(){
             gold=Math.max(0,Math.floor(Number(document.getElementById('admin-gold').value)||0));
             lives=Math.max(0,Math.floor(Number(document.getElementById('admin-lives').value)||0));
             updateStat();showAlert('자금과 생명력을 적용했습니다.');
         }
         function adminSetWave(){
+            adminEnsureGameActive();
             wave=Math.max(0,Math.min(maxWaves,Math.floor(Number(document.getElementById('admin-wave').value)||0)));
-            enemies=[];gameActive=true;
+            enemies=[];
             document.getElementById('wave-btn').disabled=false;
             updateStat();showAlert(`웨이브 ${wave} 설정 완료`);
         }
         function adminStartWave(){
-            if(!gameActive){gameActive=true;document.getElementById('start-screen').style.display='none';draw();}
+            adminEnsureGameActive();
             if(enemies.length) enemies=[];
             startWave();
         }
         function adminSpawnEnemy(){
+            adminEnsureGameActive();
             if(!wave) wave=1;
             const pIdx=Math.floor(Math.random()*paths.length), p=paths[pIdx], hp=160*Math.pow(1.28,Math.max(1,wave));
             enemies.push({pIdx,node:0,x:p[0].x,y:p[0].y,progress:0,hp,maxHp:hp,speed:2,size:24,type:'ADMIN TEST',color:'#ff4dff',bounty:100,stealth:false,marked:0,weakness:0,slowTimer:0,freezeTimer:0});
             updateStat();showAlert('테스트 적 1마리를 생성했습니다.');
         }
         function adminPlaceTower(){
+            adminEnsureGameActive();
             const id=Number(document.getElementById('admin-tower-id').value)||1, spec=towerSpecs[id];
             const x=Math.max(25,Math.min(775,Number(document.getElementById('admin-x').value)||400));
             const y=Math.max(25,Math.min(425,Number(document.getElementById('admin-y').value)||225));
