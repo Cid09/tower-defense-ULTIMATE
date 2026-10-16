@@ -288,13 +288,13 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
         function renderMeta(which){const title=document.getElementById('meta-title'),content=document.getElementById('meta-content');
           if(which==='achievements'){title.textContent='🏆 업적 / 보상';content.innerHTML=`<p>업적 보상 골드는 타워 설치·강화와 상점에서 공통으로 사용됩니다. 배지는 별도 누적됩니다.</p><div class="meta-grid">${achievementDefs.map(a=>{const done=!!achievementState[a.id];return `<div class="meta-card"><b>${done?'✅':'🔒'} ${a.name}</b><p>${a.desc}</p><small>${done?'달성 완료':'보상'} · $${a.reward.toLocaleString()}${a.medal?' · 🏅 배지 '+a.medal:''}</small></div>`}).join('')}</div><p>누적 배지: 🏅 ${achievementDefs.reduce((n,a)=>n+(a.medal&&achievementState[a.id]?a.medal:0),0)}</p>`;return;}
           title.textContent='🛒 전투 상점';const items=[
-            {id:'repair',name:'🚑 긴급 수리',desc:'생명력 3 회복 (최대 15)',cost:2000,run:()=>{if(lives>=15){showAlert('생명력이 이미 가득 찼습니다.');return false;}lives=Math.min(15,lives+3);}},
-            {id:'boost',name:'⚡ 공격력 강화',desc:'20초 동안 타워 공격력 +50%',cost:3000,run:()=>{attackBoostTicks=Math.max(attackBoostTicks,1200);}},
-            {id:'cash',name:'💰 긴급 자금',desc:'즉시 $4,000 획득',cost:1500,run:()=>{gold+=4000;}},
-            {id:'freeze',name:'⏸️ 시간 정지',desc:'10초 동안 적 이동·공격 정지',cost:5000,run:()=>{timeStopTicks=Math.max(timeStopTicks,600);}}
-          ];content.innerHTML=`<p>보유 골드: <b style="color:#ffd45a">$${gold.toLocaleString()}</b></p><div class="meta-grid">${items.map(i=>`<div class="meta-card"><b>${i.name}</b><p>${i.desc}</p><small>가격: $${i.cost.toLocaleString()}</small><button onclick="buyMetaItem('${i.id}')">구매</button></div>`).join('')}</div>`;
+            {id:'repair',name:'🚑 긴급 수리',desc:'생명력 3 회복 (최대 15)',cost:2000},
+            {id:'boost',name:'⚡ 공격력 강화',desc:'20초 동안 타워 공격력 +50%',cost:3000},
+            {id:'cash',name:'💰 긴급 자금',desc:'즉시 $4,000 획득',cost:1500},
+            {id:'freeze',name:'⏸️ 시간 정지',desc:'10초 동안 적 이동·공격 정지',cost:5000}
+          ];content.innerHTML=`<p>보유 골드: <b style="color:#ffd45a">$${gold.toLocaleString()}</b></p><p>상품별 구매 제한은 한 게임 기준이며, 새 게임을 시작하면 초기화됩니다.</p><div class="meta-grid">${items.map(i=>{const left=shopItemLimits[i.id]-shopItemPurchases[i.id];const blocked=left<=0||(i.id==='repair'&&lives>=15)||gold<i.cost;return `<div class="meta-card"><b>${i.name}</b><p>${i.desc}</p><small>가격: $${i.cost.toLocaleString()}</small><p><small>남은 구매 횟수: <b>${left}/${shopItemLimits[i.id]}</b></small></p><button ${blocked?'disabled':''} style="${blocked?'opacity:.45;cursor:not-allowed;':''}" onclick="buyMetaItem('${i.id}')">${left<=0?'구매 한도 도달':(i.id==='repair'&&lives>=15?'생명력 최대': '구매')}</button></div>`}).join('')}</div>`;
         }
-        function buyMetaItem(id){const prices={repair:2000,boost:3000,cash:1500,freeze:5000};const price=prices[id];if(!price||gold<price){showAlert('골드가 부족합니다!');return;}if(id==='repair'&&lives>=15){showAlert('생명력이 이미 가득 찼습니다.');return;}gold-=price; if(id==='repair')lives=Math.min(15,lives+3);else if(id==='boost')attackBoostTicks=Math.max(attackBoostTicks,1200);else if(id==='cash')gold+=4000;else if(id==='freeze')timeStopTicks=Math.max(timeStopTicks,600);updateStat();renderMeta('shop');createToast('🛒 아이템 구매 완료');}
+        function buyMetaItem(id){const prices={repair:2000,boost:3000,cash:1500,freeze:5000};const price=prices[id];if(!price||!(id in shopItemLimits)){showAlert('잘못된 상품입니다.');return;}if(shopItemPurchases[id]>=shopItemLimits[id]){showAlert('이 상품의 이번 게임 구매 한도에 도달했습니다!');renderMeta('shop');return;}if(gold<price){showAlert('골드가 부족합니다!');return;}if(id==='repair'&&lives>=15){showAlert('생명력이 이미 가득 찼습니다.');return;}gold-=price; if(id==='repair')lives=Math.min(15,lives+3);else if(id==='boost')attackBoostTicks=Math.max(attackBoostTicks,1200);else if(id==='cash')gold+=4000;else if(id==='freeze')timeStopTicks=Math.max(timeStopTicks,600);shopItemPurchases[id]++;updateStat();renderMeta('shop');createToast(`🛒 구매 완료 · 남은 횟수 ${shopItemLimits[id]-shopItemPurchases[id]}`);}
         function chooseTowerBranch(idx,branch){const t=placedTowers[idx];if(!t||t.branch)return;t.branch=branch;if(branch==='assault'){t.dmg*=1.35;t.fireRate*=.9;}else{t.range*=1.25;if(t.isBank){t.bankIncomeBonus=1.5;}if(t.id===10)t.healBonus=1;}updateTowerPanel(idx);createToast(branch==='assault'?'⚔️ 공격 특화 경로 선택':'🛡️ 지원 특화 경로 선택');}
 
         let currentBgm = null;
@@ -462,8 +462,12 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             b.innerText=text;b.dataset.kind=kind;b.style.display='block';
             clearTimeout(createToast.timer);createToast.timer=setTimeout(()=>b.style.display='none',2200);
         }
+        const shopItemLimits = { repair: 3, boost: 3, cash: 4, freeze: 2 };
+        let shopItemPurchases = { repair: 0, boost: 0, cash: 0, freeze: 0 };
+        function resetShopItemLimits(){ shopItemPurchases = { repair: 0, boost: 0, cash: 0, freeze: 0 }; }
         function startGame(waves) {
             maxWaves = waves;
+            resetShopItemLimits();
             // 게임을 시작하면 대기실 리스너를 확실하게 지워 안전장치 마련
             window.removeEventListener('click', initMainBGM);
             window.removeEventListener('touchstart', initMainBGM);
