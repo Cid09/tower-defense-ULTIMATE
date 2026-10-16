@@ -167,6 +167,15 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
 #dev-panel .admin-section strong{color:#5df7ff;font-size:13px}
 #dev-panel .dev-btn{min-height:38px;touch-action:manipulation}
 </style>
+
+<style>
+#meta-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.meta-btn{background:#132638;color:#eafaff;border:1px solid #5df7ff;border-radius:9px;padding:8px 11px;font-weight:800;font-size:12px}
+.meta-overlay{display:none;position:fixed;inset:0;z-index:15000;background:rgba(1,5,12,.86);align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
+.meta-panel{width:min(94vw,620px);max-height:86dvh;overflow:auto;background:linear-gradient(145deg,#101d2b,#050a12);color:#eefaff;border:1px solid #5df7ff;border-radius:16px;padding:16px;box-shadow:0 0 35px #00d9ff33;box-sizing:border-box}
+.meta-panel h2{margin:0 0 10px;color:#5df7ff}.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}.meta-card{border:1px solid #294454;border-radius:10px;padding:11px;background:#0a1420}.meta-card button{width:100%;margin-top:8px;background:#145b56;color:white}.meta-card small{color:#aac4d3}.meta-close{background:#394b5b;color:white;width:100%;margin-top:12px}
+@media(max-width:600px){#meta-buttons{gap:4px}.meta-btn{padding:7px 8px;font-size:11px}.meta-panel{padding:12px;max-height:88dvh}.meta-grid{grid-template-columns:1fr}}
+</style>
+
 </head>
 <body>
 
@@ -231,6 +240,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
 
     <div class="status-bar">
         <div id="stat-text">자금: $2,500 | 생명: 15 | 웨이브: 0 / 0</div>
+        <div id="meta-buttons"><button class="meta-btn" onclick="openMeta('shop')">🛒 상점</button><button class="meta-btn" onclick="openMeta('achievements')">🏆 업적</button></div>
         <button onclick="startWave()" id="wave-btn">웨이브 시작</button>
     </div>
 
@@ -242,6 +252,9 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
 
     <div class="shop" id="shop"></div>
 
+<div class="meta-overlay" id="meta-overlay" onclick="if(event.target===this)closeMeta()"><div class="meta-panel"><h2 id="meta-title">상점</h2><div id="meta-content"></div><button class="meta-close" onclick="closeMeta()">닫기</button></div></div>
+
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -252,6 +265,38 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
         let devClickCount = 0, gameSpeed = 1;
         let adminAwaitingKey = false, adminShowRanges = false, adminShowEnemyInfo = false;
         let isMuted = false;
+        let attackBoostTicks=0, timeStopTicks=0, branchChoiceTower=null;
+        let totalBankIncome=0, bossesDefeated=0, totalUpgrades=0, totalKills=0, totalTowersPlaced=0;
+        let achievementState={};
+        try{achievementState=JSON.parse(localStorage.getItem('phd-v5-achievements')||'{}')||{};}catch(e){achievementState={};}
+        const achievementDefs=[
+          {id:'first_wave',name:'첫 출동',desc:'첫 웨이브 시작',test:()=>wave>=1,reward:500,medal:0},
+          {id:'wave10',name:'장기 방역',desc:'웨이브 10 도달',test:()=>wave>=10,reward:1500,medal:1},
+          {id:'wave20',name:'최종 방어선',desc:'웨이브 20 도달',test:()=>wave>=20,reward:3000,medal:2},
+          {id:'first_bank',name:'경제 기반',desc:'집중실 첫 설치',test:()=>placedTowers.some(t=>t.isBank)||totalBankIncome>0,reward:700,medal:0},
+          {id:'bank10k',name:'투자 회수',desc:'집중실 누적 수익 $10,000',test:()=>totalBankIncome>=10000,reward:1500,medal:1},
+          {id:'bank100k',name:'경제 제국',desc:'집중실 누적 수익 $100,000',test:()=>totalBankIncome>=100000,reward:5000,medal:3},
+          {id:'upgrade10',name:'기술 진보',desc:'타워 강화 10회',test:()=>totalUpgrades>=10,reward:1200,medal:1},
+          {id:'towers10',name:'방어망 구축',desc:'타워 10개 설치',test:()=>totalTowersPlaced>=10,reward:1000,medal:1},
+          {id:'boss5',name:'보스 사냥꾼',desc:'보스 3마리 처치',test:()=>bossesDefeated>=3,reward:4000,medal:3},
+          {id:'kills100',name:'박멸 작전',desc:'적 100마리 처치',test:()=>totalKills>=100,reward:2000,medal:1}
+        ];
+        function saveAchievementState(){try{localStorage.setItem('phd-v5-achievements',JSON.stringify(achievementState));}catch(e){}}
+        function checkAchievements(){let changed=false;for(const a of achievementDefs){if(!achievementState[a.id]&&a.test()){achievementState[a.id]={claimed:true,at:Date.now()};gold+=a.reward;changed=true;createToast(`🏆 업적 달성: ${a.name} +$${a.reward}`);}}if(changed){saveAchievementState();updateStat();}}
+        function openMeta(which){const overlay=document.getElementById('meta-overlay');overlay.style.display='flex';renderMeta(which);}
+        function closeMeta(){document.getElementById('meta-overlay').style.display='none';}
+        function renderMeta(which){const title=document.getElementById('meta-title'),content=document.getElementById('meta-content');
+          if(which==='achievements'){title.textContent='🏆 업적 / 보상';content.innerHTML=`<p>업적 보상 골드는 타워 설치·강화와 상점에서 공통으로 사용됩니다. 배지는 별도 누적됩니다.</p><div class="meta-grid">${achievementDefs.map(a=>{const done=!!achievementState[a.id];return `<div class="meta-card"><b>${done?'✅':'🔒'} ${a.name}</b><p>${a.desc}</p><small>${done?'달성 완료':'보상'} · $${a.reward.toLocaleString()}${a.medal?' · 🏅 배지 '+a.medal:''}</small></div>`}).join('')}</div><p>누적 배지: 🏅 ${achievementDefs.reduce((n,a)=>n+(a.medal&&achievementState[a.id]?a.medal:0),0)}</p>`;return;}
+          title.textContent='🛒 전투 상점';const items=[
+            {id:'repair',name:'🚑 긴급 수리',desc:'생명력 3 회복 (최대 15)',cost:2000,run:()=>{if(lives>=15){showAlert('생명력이 이미 가득 찼습니다.');return false;}lives=Math.min(15,lives+3);}},
+            {id:'boost',name:'⚡ 공격력 강화',desc:'20초 동안 타워 공격력 +50%',cost:3000,run:()=>{attackBoostTicks=Math.max(attackBoostTicks,1200);}},
+            {id:'cash',name:'💰 긴급 자금',desc:'즉시 $4,000 획득',cost:1500,run:()=>{gold+=4000;}},
+            {id:'freeze',name:'⏸️ 시간 정지',desc:'10초 동안 적 이동·공격 정지',cost:5000,run:()=>{timeStopTicks=Math.max(timeStopTicks,600);}}
+          ];content.innerHTML=`<p>보유 골드: <b style="color:#ffd45a">$${gold.toLocaleString()}</b></p><div class="meta-grid">${items.map(i=>`<div class="meta-card"><b>${i.name}</b><p>${i.desc}</p><small>가격: $${i.cost.toLocaleString()}</small><button onclick="buyMetaItem('${i.id}')">구매</button></div>`).join('')}</div>`;
+        }
+        function buyMetaItem(id){const prices={repair:2000,boost:3000,cash:1500,freeze:5000};const price=prices[id];if(!price||gold<price){showAlert('골드가 부족합니다!');return;}if(id==='repair'&&lives>=15){showAlert('생명력이 이미 가득 찼습니다.');return;}gold-=price; if(id==='repair')lives=Math.min(15,lives+3);else if(id==='boost')attackBoostTicks=Math.max(attackBoostTicks,1200);else if(id==='cash')gold+=4000;else if(id==='freeze')timeStopTicks=Math.max(timeStopTicks,600);updateStat();renderMeta('shop');createToast('🛒 아이템 구매 완료');}
+        function chooseTowerBranch(idx,branch){const t=placedTowers[idx];if(!t||t.branch)return;t.branch=branch;if(branch==='assault'){t.dmg*=1.35;t.fireRate*=.9;}else{t.range*=1.25;if(t.isBank){t.bankIncomeBonus=1.5;}if(t.id===10)t.healBonus=1;}updateTowerPanel(idx);createToast(branch==='assault'?'⚔️ 공격 특화 경로 선택':'🛡️ 지원 특화 경로 선택');}
+
         let currentBgm = null;
 
         // --- 🎵 오디오 시스템 및 볼륨 설정 ---
@@ -333,33 +378,6 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             [{x:0, y:370}, {x:250, y:370}, {x:250, y:270}, {x:500, y:270}, {x:500, y:370}, {x:720, y:370}, {x:720, y:225}, {x:800, y:225}]
         ];
 
-        // 타워 설치 검증: 경로 위와 기존 타워 근처에는 설치할 수 없음
-        function pointToSegmentDistance(px, py, ax, ay, bx, by) {
-            const dx = bx - ax, dy = by - ay;
-            const len2 = dx * dx + dy * dy;
-            if (!len2) return Math.hypot(px - ax, py - ay);
-            const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
-            return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
-        }
-        function getTowerPlacementError(x, y, spec, ignoreIndex = -1) {
-            const radius = spec && spec.isMega ? 45 : 25;
-            if (x < radius || x > 800 - radius || y < radius || y > 450 - radius) return '맵 가장자리에는 설치할 수 없습니다.';
-            for (const path of paths) {
-                for (let i = 0; i < path.length - 1; i++) {
-                    if (pointToSegmentDistance(x, y, path[i].x, path[i].y, path[i+1].x, path[i+1].y) < radius + 12) {
-                        return '길 위에는 타워를 설치할 수 없습니다.';
-                    }
-                }
-            }
-            for (let i = 0; i < placedTowers.length; i++) {
-                if (i === ignoreIndex) continue;
-                const other = placedTowers[i];
-                const otherRadius = other.isMega ? 45 : 25;
-                if (Math.hypot(x - other.x, y - other.y) < radius + otherRadius + 5) return '다른 타워와 겹치거나 너무 가까워 설치할 수 없습니다.';
-            }
-            return '';
-        }
-
         // --- 타워 이미지 로드 ---
         const towerImages = {};
         for(let i=1; i<=15; i++) {
@@ -410,6 +428,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 <div style="background:rgba(93,247,255,.08);padding:10px;border-radius:10px;margin:8px 0">${abilityText(t)}</div>
                 <div style="margin-top:8px">공격 우선순위: <b style="color:#ffd45a">${priorityNames[t.priority||'first']}</b></div>
                 <button class="upgrade-btn" onclick="upgradeTower(${idx})" ${t.level>=3?'disabled':''}>${t.level>=3?'✨ 최종 진화 완료':'⚡ Lv.'+(t.level+1)+' 진화 ($'+nextCost+')'}</button>
+                ${t.level>=2&&!t.branch?`<div style="margin:8px 0;color:#5df7ff">분기 강화 선택</div><button class="upgrade-btn" onclick="chooseTowerBranch(${idx},'assault')">⚔️ 공격 특화 (+35% 공격력)</button><button class="upgrade-btn" onclick="chooseTowerBranch(${idx},'support')">🛡️ 지원 특화 (+25% 사거리/지원 효과)</button>`:t.branch?`<div style="color:#5df7ff;margin:7px 0">분기: ${t.branch==='assault'?'⚔️ 공격 특화':'🛡️ 지원 특화'}</div>`:''}
                 <button class="upgrade-btn" onclick="cyclePriority(${idx})" style="background:#5df7ff;margin-top:7px">🎯 우선순위 변경</button>
                 <button class="sell-btn" onclick="sellTower(${idx})">데이터 삭제 (철거)</button>
             </div>`;
@@ -452,7 +471,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             document.getElementById('start-screen').style.display = 'none';
             gameActive = true;
             updateStat();
-            updateShopUI();
+            updateShopUI(); checkAchievements();
 
             // 일반 전투 음악으로 전환
             switchBGM(audioCtx.bgmBattle);
@@ -534,15 +553,20 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             enemies.push({pIdx,node:0,x:p[0].x,y:p[0].y,progress:0,hp,maxHp:hp,speed:2,size:24,type:'ADMIN TEST',color:'#ff4dff',bounty:100,stealth:false,marked:0,weakness:0,slowTimer:0,freezeTimer:0});
             updateStat();showAlert('테스트 적 1마리를 생성했습니다.');
         }
+
+        function isInvalidTowerSpot(x,y,radius=25){
+            for(const path of paths){for(let i=0;i<path.length-1;i++){const a=path[i],b=path[i+1],dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;const t=len2?Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/len2)):0;const px=a.x+t*dx,py=a.y+t*dy;if(Math.hypot(x-px,y-py)<radius+22)return '경로';}}
+            if(placedTowers.some(t=>Math.hypot(t.x-x,t.y-y)<radius+(t.isMega?55:25)))return '다른 타워';
+            return '';
+        }
         function adminPlaceTower(){
             adminEnsureGameActive();
             const id=Number(document.getElementById('admin-tower-id').value)||1, spec=towerSpecs[id];
             const x=Math.max(25,Math.min(775,Number(document.getElementById('admin-x').value)||400));
             const y=Math.max(25,Math.min(425,Number(document.getElementById('admin-y').value)||225));
             if(placedTowers.length>=150){showAlert('타워 수 제한(150)에 도달했습니다.');return;}
-            const placementError = getTowerPlacementError(x, y, spec);
-            if (placementError) { showAlert(placementError); return; }
-            placedTowers.push({...spec,x,y,level:1,priority:'first',cooldown:0,effectTimer:0,totalSpent:spec.cost,combo:0,comboTarget:null});
+            const invalid=isInvalidTowerSpot(x,y,spec.isMega?55:25);if(invalid){showAlert(invalid==='경로'?'경로 위에는 설치할 수 없습니다.':'타워가 겹치지 않게 설치하세요.');return;}
+            placedTowers.push({...spec,x,y,level:1,priority:'first',cooldown:0,effectTimer:0,totalSpent:spec.cost,combo:0,comboTarget:null,bankTimer:300});
             spawnInstallEffect(x,y,spec.isMega);updateStat();updateShopUI();showAlert(`${spec.name} 관리자 설치 완료`);
         }
         function adminUpgradeLast(){const i=placedTowers.length-1;if(i<0){showAlert('강화할 타워가 없습니다.');return;}const t=placedTowers[i];if(t.level>=3){showAlert('이미 최대 레벨입니다.');return;}gold= Math.max(gold,Math.floor(t.cost*(t.level===1?2.5:4)));upgradeTower(i);}
@@ -576,7 +600,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
 
         function startWave() {
             if(!gameActive || enemies.length > 0) return;
-            wave++;
+            wave++; checkAchievements();
 
             if (wave % 10 === 0) {
                 createToast(`🚨 WARNING  //  BOSS WAVE ${wave}`);
@@ -585,7 +609,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 switchBGM(audioCtx.bgmBattle);
             }
 
-            gold += (300 + (wave * 50) + placedTowers.filter(t=>t.isBank).length * 800);
+            gold += (300 + (wave * 50) + placedTowers.filter(t=>t.isBank).reduce((sum,t)=>sum + 1000 * t.level, 0));
             updateStat();
             let count = 0;
             let spawnInterval = setInterval(() => {
@@ -595,7 +619,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 let type = "인플루엔자", hpMult = 1, speed = 2.4, color = "lime", size = 28, bounty = 20;
 
                 let stealth=false;
-                if (wave % 10 === 0 && count === 0) { type = "COVID-19"; hpMult = 45; speed = 0.9; color = "red"; size = 65; bounty = 1500; }
+                if (wave % 10 === 0 && count === 0) { type = "COVID-19"; hpMult = 45 + wave*1.5; speed = 0.9; color = "red"; size = 65; bounty = 1500 + wave*100; }
                 else if (rand < 0.12) { type = "은신 바이러스"; hpMult = 1.4; speed = 3.6; color = "#8e7dff"; size = 25; bounty = 35; stealth=true; }
                 else if (rand < 0.27) { type = "노로바이러스"; hpMult = 0.5; speed = 4.2; color = "yellow"; size = 22; bounty = 15; }
                 else if (rand < 0.42) { type = "에볼라"; hpMult = 3.0; speed = 1.2; color = "purple"; size = 35; bounty = 50; }
@@ -613,7 +637,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             const t=placedTowers[idx]; if(!t||t.level>=3) return;
             const upgradeCost=Math.floor(t.cost*(t.level===1?2.5:4.0));
             if(gold<upgradeCost){showAlert(`자금 부족! ($${upgradeCost})`);return;}
-            gold-=upgradeCost; t.totalSpent+=upgradeCost; t.level++;
+            gold-=upgradeCost; t.totalSpent+=upgradeCost; t.level++; totalUpgrades++;
             t.dmg*=t.isMega?5.0:2.5; t.fireRate*=.6;
             if(t.id===2||t.id===5) t.range*=1.08;
             if(t.id===9||t.id===14) t.range*=1.18;
@@ -640,6 +664,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
         }
 
         function updateGame() {
+            if(attackBoostTicks>0) attackBoostTicks--; if(timeStopTicks>0) timeStopTicks--;
             if(shakeAmount > 0) {
                 canvas.style.transform = `translate(${(Math.random()-0.5)*shakeAmount}px, ${(Math.random()-0.5)*shakeAmount}px)`;
                 shakeAmount *= 0.9;
@@ -653,18 +678,18 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 if(e.marked>0) e.marked--; if(e.weakness>0) e.weakness--;
                 if(e.slowTimer>0) e.slowTimer--; if(e.freezeTimer>0) e.freezeTimer--;
                 let target = paths[e.pIdx][e.node + 1], dist = Math.hypot(target.x - e.x, target.y - e.y);
-                let moveSpeed = e.speed * (e.freezeTimer>0 ? 0 : (e.slowTimer>0 ? 0.48 : 1));
+                let moveSpeed = e.speed * ((timeStopTicks>0 || e.freezeTimer>0) ? 0 : (e.slowTimer>0 ? 0.48 : 1));
                 if(dist < Math.max(moveSpeed,0.01)) {
                     if(++e.node >= paths[e.pIdx].length - 1) { lives--; updateStat(); return false; }
                 } else if(moveSpeed>0) { e.x += (target.x - e.x) / dist * moveSpeed; e.y += (target.y - e.y) / dist * moveSpeed; }
                 e.progress=e.node + (1-Math.min(dist,200)/200);
-                if(e.hp <= 0) { gold += e.bounty; updateStat(); return false; }
+                if(e.hp <= 0) { gold += e.bounty; totalKills++; if(e.type==='COVID-19') {bossesDefeated++;createToast(`👑 보스 처치! 보너스 +$${e.bounty}`);} checkAchievements(); updateStat(); return false; }
                 return true;
             });
 
-            if(wasEnemyBefore && enemies.length === 0 && gameActive && wave % 10 === 0) {
+            if(wasEnemyBefore && enemies.length === 0 && gameActive) { checkAchievements(); if(wave % 10 === 0) {
                 switchBGM(audioCtx.bgmBattle);
-            }
+            }}
 
             summons = summons.filter(s => {
                 let targetNode = paths[s.pIdx][s.node - 1];
@@ -693,14 +718,17 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                     // 공격 자체는 하지 않고 주변 버프만 제공
                     t.cooldown=0; return;
                 }
-                if(t.isBank) {
-                    t.incomeTimer = (t.incomeTimer || 0) + 1;
-                    if (t.incomeTimer >= 300) { // 약 5초마다 수익 (60fps 기준)
-                        t.incomeTimer = 0;
-                        const income = 50 * (t.level || 1);
-                        gold += income;
+                if(t.isBank){
+                    // 집중실: 5초마다 레벨에 따라 자금 생산 (60fps 기준)
+                    t.bankTimer = (t.bankTimer ?? 300) - 1;
+                    if(t.bankTimer <= 0){
+                        const baseIncome = t.level===1 ? 150 : t.level===2 ? 300 : 500;
+                        const income = Math.floor(baseIncome*(t.bankIncomeBonus||1));
+                        gold += income; totalBankIncome += income; checkAchievements();
+                        t.bankTimer = 300;
                         updateStat();
-                        effects.push({x:t.x,y:t.y,r:8,maxR:38,type:'heal',alpha:1});
+                        effects.push({x:t.x,y:t.y,r:8,maxR:55,type:'heal',alpha:1});
+                        createToast(`💰 집중실 수익 +$${income}`);
                     }
                     return;
                 }
@@ -717,7 +745,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                     } else {
                         let target = getTowerTarget(t);
                         if(target) {
-                            let currentDmg = t.dmg;
+                            let currentDmg = t.dmg * (attackBoostTicks>0?1.5:1);
                             const level=t.level;
                             // 주변 버프 타워의 실시간 강화
                             const nearbyBuff=placedTowers.filter(o=>o!==t && (o.id===9||o.id===14) && Math.hypot(o.x-t.x,o.y-t.y)<(o.id===14&&o.level>=2?300:180)).reduce((v,o)=>v*(1+(o.id===9?(0.12+0.06*o.level):(0.08*o.level))),1);
@@ -820,8 +848,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 const spec = towerSpecs[selectedTowerId];
                 const size = spec.isMega ? 90 : 50;
                 ctx.beginPath(); ctx.arc(mousePos.x, mousePos.y, spec.range, 0, Math.PI*2);
-                const placementError = getTowerPlacementError(mousePos.x, mousePos.y, spec);
-                const canPlace = gold >= spec.cost && !placementError;
+                const canPlace = gold >= spec.cost;
                 ctx.strokeStyle = canPlace ? "rgba(85,255,154,.65)" : "rgba(255,84,112,.7)"; ctx.setLineDash([7,7]); ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
                 ctx.beginPath();ctx.arc(mousePos.x,mousePos.y,Math.max(18,spec.range*.16)+Math.sin(Date.now()/140)*4,0,Math.PI*2);ctx.strokeStyle=canPlace?(spec.isMega?'rgba(93,247,255,.5)':'rgba(85,255,154,.4)'):'rgba(255,84,112,.5)';ctx.stroke();
                 ctx.globalAlpha = 0.5;
@@ -867,16 +894,15 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             }
             if(selectedTowerId) {
                 const spec = towerSpecs[selectedTowerId];
-                const placementError = getTowerPlacementError(x, y, spec);
-                if (placementError) { showAlert(placementError); return; }
+                const invalid=isInvalidTowerSpot(x,y,spec.isMega?55:25);if(invalid){showAlert(invalid==='경로'?'경로 위에는 설치할 수 없습니다.':'타워가 겹치지 않게 설치하세요.');return;}
                 if(gold >= spec.cost) {
                     gold -= spec.cost;
                     if(spec.isMega) {
                         shakeAmount = 50; flashAlpha = 0.5; createToast("☢️ MEGA UNIT DEPLOYED");
                         playSound(audioCtx.megaBuild);
                     }
-                    placedTowers.push({ ...spec, x, y, level: 1, priority: 'first', cooldown: 0, effectTimer: 0, totalSpent: spec.cost, combo:0, comboTarget:null });
-                    spawnInstallEffect(x,y,spec.isMega);
+                    placedTowers.push({ ...spec, x, y, level: 1, priority: 'first', cooldown: 0, effectTimer: 0, totalSpent: spec.cost, combo:0, comboTarget:null, bankTimer:300 });
+                    totalTowersPlaced++; checkAchievements(); spawnInstallEffect(x,y,spec.isMega);
                     selectedTowerId = null; updateStat(); updateShopUI();
                 } else { showAlert("예산이 부족합니다!"); }
             }
@@ -913,7 +939,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
         });
 
         function showAlert(m) { const b = document.getElementById('alert-banner'); b.innerText = m; b.style.display='block'; setTimeout(()=>b.style.display='none', 2500); }
-        function updateStat() { document.getElementById('stat-text').innerText = `자금: $${gold.toLocaleString()} | 생명: ${lives} | 웨이브: ${wave} / ${maxWaves}`; }
+        function updateStat() { const buffs=(attackBoostTicks>0?' ⚡공격강화':'')+(timeStopTicks>0?' ⏸시간정지':''); document.getElementById('stat-text').innerText = `자금: $${gold.toLocaleString()} | 생명: ${lives} | 웨이브: ${wave} / ${maxWaves}${buffs}`; }
 
         function endGame(text, isVictory) {
             gameActive = false;
