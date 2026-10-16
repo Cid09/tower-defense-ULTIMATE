@@ -157,21 +157,52 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
   #start-screen,#pause-screen,#result-screen{padding-bottom:max(14px,env(safe-area-inset-bottom));}
 }
 
+
+#admin-key-gate{display:none;position:fixed;inset:0;z-index:19999;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+#admin-key-gate>div{width:min(92vw,320px);background:#101a27;border:1px solid #5df7ff;border-radius:12px;padding:18px;box-shadow:0 0 30px #00bcd455}
+#dev-panel{width:min(94vw,420px);max-height:82dvh;overflow:auto;box-sizing:border-box;z-index:20000}
+#dev-panel input,#dev-panel select{width:100%;box-sizing:border-box;padding:9px;margin:4px 0;background:#0b1420;color:#eafaff;border:1px solid #426070;border-radius:6px;font-size:14px}
+#dev-panel .admin-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0}
+#dev-panel .admin-section{border:1px solid #294352;border-radius:8px;padding:9px;margin:9px 0;text-align:left}
+#dev-panel .admin-section strong{color:#5df7ff;font-size:13px}
+#dev-panel .dev-btn{min-height:38px;touch-action:manipulation}
 </style>
 </head>
 <body>
 
+    <div id="admin-key-gate"><div><h3 style="color:#5df7ff;margin-top:0">🔐 ADMIN KEY</h3><p style="font-size:13px;color:#c5d6e4">해금 키 <b>D</b>를 입력하세요.</p><input id="admin-key-input" type="text" maxlength="1" autocapitalize="characters" autocomplete="off" aria-label="관리자 해금 키" style="width:100%;box-sizing:border-box;padding:12px;background:#07101a;color:white;border:1px solid #426070;border-radius:7px;font-size:18px;text-align:center"><div class="admin-row"><button class="dev-btn" onclick="submitAdminKey()">확인</button><button class="dev-btn" onclick="cancelAdminKey()">취소</button></div></div></div>
     <div id="dev-panel">
         <h3>🛠️ MASTER DEBUG CONSOLE</h3>
+        <div class="admin-section"><strong>자원 제어</strong>
+          <div class="admin-row"><input id="admin-gold" type="number" min="0" value="2500" aria-label="자금"><input id="admin-lives" type="number" min="0" value="15" aria-label="생명력"></div>
+          <button class="dev-btn" onclick="adminSetResources()">자금·생명력 적용</button>
+        </div>
+        <div class="admin-section"><strong>웨이브 제어</strong>
+          <div class="admin-row"><input id="admin-wave" type="number" min="0" max="100" value="0" aria-label="웨이브"><button class="dev-btn" onclick="adminSetWave()">웨이브 설정</button></div>
+          <div class="admin-row"><button class="dev-btn" onclick="adminStartWave()">▶ 웨이브 시작</button><button class="dev-btn" onclick="cheatClearWave()">적 전체 제거</button></div>
+        </div>
+        <div class="admin-section"><strong>적 제어</strong>
+          <button class="dev-btn" onclick="adminSpawnEnemy()">적 1마리 생성</button>
+        </div>
+        <div class="admin-section"><strong>타워 제어</strong>
+          <select id="admin-tower-id" aria-label="타워 종류"></select>
+          <div class="admin-row"><input id="admin-x" type="number" min="25" max="775" value="400" aria-label="타워 X 좌표"><input id="admin-y" type="number" min="25" max="425" value="225" aria-label="타워 Y 좌표"></div>
+          <button class="dev-btn" onclick="adminPlaceTower()">좌표에 타워 설치</button>
+          <div class="admin-row"><button class="dev-btn" onclick="adminUpgradeLast()">최근 타워 강화</button><button class="dev-btn" onclick="adminSellLast()">최근 타워 판매</button></div>
+        </div>
+        <div class="admin-section"><strong>디버그 표시</strong>
+          <div class="admin-row"><button class="dev-btn" onclick="adminToggleRanges()">사거리 표시 전환</button><button class="dev-btn" onclick="adminToggleEnemyInfo()">적 정보 전환</button></div>
+          <div id="admin-debug-status" style="font-size:12px;color:#9cb4c5">사거리: 꺼짐 · 적 정보: 꺼짐</div>
+        </div>
         <div class="dev-grid">
             <button class="dev-btn" onclick="cheatGold()">💰 자금 무한</button>
             <button class="dev-btn" onclick="cheatLives()">❤️ 생명 무적</button>
             <button class="dev-btn" onclick="cheatOneShot()">🔥 원샷원킬</button>
-            <button class="dev-btn" onclick="cheatClearWave()">⚡ 웨이브 삭제</button>
             <button class="dev-btn" onclick="setGameSpeed(1)">🏃 1배속</button>
             <button class="dev-btn" onclick="setGameSpeed(2.5)">🚀 2.5배속</button>
+            <button class="dev-btn" onclick="setGameSpeed(0.5)">🐢 0.5배속</button>
         </div>
-        <button class="dev-btn" onclick="closeDevPanel()" style="background:#e74c3c; color:white; width:100%; margin-top:15px; border: 1px solid #fff;">닫기</button>
+        <button class="dev-btn" onclick="closeDevPanel()" style="background:#e74c3c;color:white;width:100%;margin-top:12px;border:1px solid #fff;">닫기</button>
     </div>
 
     <div id="alert-banner">🚨 알림</div>
@@ -219,6 +250,7 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
         let ambientParticles = Array.from({length:85},()=>({x:Math.random()*800,y:Math.random()*450,r:Math.random()*1.8+.3,v:Math.random()*.35+.08,a:Math.random()*.45+.12}));
         let shakeAmount = 0, flashAlpha = 0;
         let devClickCount = 0, gameSpeed = 1;
+        let adminAwaitingKey = false, adminShowRanges = false, adminShowEnemyInfo = false;
         let isMuted = false;
         let currentBgm = null;
 
@@ -413,11 +445,69 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
         function devCheck() {
             devClickCount++;
             if (devClickCount >= 5) {
-                document.getElementById('dev-panel').style.display = 'block';
-                showAlert("🔓 마스터 디버그 패널 활성화!");
                 devClickCount = 0;
+                adminAwaitingKey = true;
+                document.getElementById('admin-key-gate').style.display='flex';
+                setTimeout(()=>document.getElementById('admin-key-input').focus(),80);
+                showAlert("🔐 해금 키 D를 입력하세요.");
             }
         }
+        window.addEventListener('keydown', (e) => {
+            if (adminAwaitingKey && e.key.toLowerCase() === 'd' && e.target.id !== 'admin-key-input') {
+                adminAwaitingKey = false;
+                document.getElementById('admin-key-gate').style.display='none';
+                const panel=document.getElementById('dev-panel');
+                panel.style.display='block';
+                const select=document.getElementById('admin-tower-id');
+                if(select && !select.options.length) for(let i=1;i<=15;i++){const o=document.createElement('option');o.value=i;o.textContent=`${towerSpecs[i].name} ($${towerSpecs[i].cost})`;select.appendChild(o);}
+                showAlert('🔓 ADMIN TOOL 활성화');
+            } else if (e.key === 'Escape') closeDevPanel();
+        });
+        function submitAdminKey(){
+            const input=document.getElementById('admin-key-input');
+            if((input.value||'').trim().toLowerCase()!=='d'){showAlert('해금 키가 올바르지 않습니다.');input.value='';input.focus();return;}
+            adminAwaitingKey=false;document.getElementById('admin-key-gate').style.display='none';input.value='';
+            const panel=document.getElementById('dev-panel');panel.style.display='block';
+            const select=document.getElementById('admin-tower-id');
+            if(select && !select.options.length) for(let i=1;i<=15;i++){const o=document.createElement('option');o.value=i;o.textContent=`${towerSpecs[i].name} ($${towerSpecs[i].cost})`;select.appendChild(o);}
+            showAlert('🔓 ADMIN TOOL 활성화');
+        }
+        function cancelAdminKey(){adminAwaitingKey=false;document.getElementById('admin-key-gate').style.display='none';document.getElementById('admin-key-input').value='';}
+        function adminSetResources(){
+            gold=Math.max(0,Math.floor(Number(document.getElementById('admin-gold').value)||0));
+            lives=Math.max(0,Math.floor(Number(document.getElementById('admin-lives').value)||0));
+            updateStat();showAlert('자금과 생명력을 적용했습니다.');
+        }
+        function adminSetWave(){
+            wave=Math.max(0,Math.min(maxWaves,Math.floor(Number(document.getElementById('admin-wave').value)||0)));
+            enemies=[];gameActive=true;
+            document.getElementById('wave-btn').disabled=false;
+            updateStat();showAlert(`웨이브 ${wave} 설정 완료`);
+        }
+        function adminStartWave(){
+            if(!gameActive){gameActive=true;document.getElementById('start-screen').style.display='none';draw();}
+            if(enemies.length) enemies=[];
+            startWave();
+        }
+        function adminSpawnEnemy(){
+            if(!wave) wave=1;
+            const pIdx=Math.floor(Math.random()*paths.length), p=paths[pIdx], hp=160*Math.pow(1.28,Math.max(1,wave));
+            enemies.push({pIdx,node:0,x:p[0].x,y:p[0].y,progress:0,hp,maxHp:hp,speed:2,size:24,type:'ADMIN TEST',color:'#ff4dff',bounty:100,stealth:false,marked:0,weakness:0,slowTimer:0,freezeTimer:0});
+            updateStat();showAlert('테스트 적 1마리를 생성했습니다.');
+        }
+        function adminPlaceTower(){
+            const id=Number(document.getElementById('admin-tower-id').value)||1, spec=towerSpecs[id];
+            const x=Math.max(25,Math.min(775,Number(document.getElementById('admin-x').value)||400));
+            const y=Math.max(25,Math.min(425,Number(document.getElementById('admin-y').value)||225));
+            if(placedTowers.length>=150){showAlert('타워 수 제한(150)에 도달했습니다.');return;}
+            placedTowers.push({...spec,x,y,level:1,priority:'first',cooldown:0,effectTimer:0,totalSpent:spec.cost,combo:0,comboTarget:null});
+            spawnInstallEffect(x,y,spec.isMega);updateStat();updateShopUI();showAlert(`${spec.name} 관리자 설치 완료`);
+        }
+        function adminUpgradeLast(){const i=placedTowers.length-1;if(i<0){showAlert('강화할 타워가 없습니다.');return;}const t=placedTowers[i];if(t.level>=3){showAlert('이미 최대 레벨입니다.');return;}gold= Math.max(gold,Math.floor(t.cost*(t.level===1?2.5:4)));upgradeTower(i);}
+        function adminSellLast(){const i=placedTowers.length-1;if(i<0){showAlert('판매할 타워가 없습니다.');return;}const t=placedTowers.splice(i,1)[0];gold+=Math.floor(t.totalSpent*.7);updateStat();updateShopUI();showAlert(`${t.name} 판매 완료`);}
+        function adminToggleRanges(){adminShowRanges=!adminShowRanges;adminUpdateDebugStatus();}
+        function adminToggleEnemyInfo(){adminShowEnemyInfo=!adminShowEnemyInfo;adminUpdateDebugStatus();}
+        function adminUpdateDebugStatus(){const e=document.getElementById('admin-debug-status');if(e)e.textContent=`사거리: ${adminShowRanges?'켜짐':'꺼짐'} · 적 정보: ${adminShowEnemyInfo?'켜짐':'꺼짐'}`;}
 
         function cheatGold() { gold = 99999999; updateStat(); showAlert("💰 자금이 무한으로 설정되었습니다."); }
         function cheatClearWave() { enemies = []; showAlert("⚡ 현재 웨이브의 바이러스를 박멸했습니다."); }
@@ -701,6 +791,12 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 ctx.fillRect(e.x - barW/2, e.y - e.size/2 - 12, barW * (e.hp/e.maxHp), 7);
             });
 
+            if(adminShowRanges){
+                ctx.save();placedTowers.forEach(t=>{ctx.beginPath();ctx.arc(t.x,t.y,t.range,0,Math.PI*2);ctx.strokeStyle='rgba(93,247,255,.8)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.stroke();});ctx.restore();
+            }
+            if(adminShowEnemyInfo){
+                ctx.save();ctx.font='10px monospace';ctx.textAlign='center';enemies.forEach(e=>{ctx.fillStyle='#fff';ctx.strokeStyle='#081018';ctx.lineWidth=3;const label=`${e.type} HP:${Math.ceil(e.hp)}/${Math.ceil(e.maxHp)} SPD:${e.speed}`;ctx.strokeText(label,e.x,e.y-e.size/2-19);ctx.fillText(label,e.x,e.y-e.size/2-19);});ctx.restore();
+            }
             if(lives <= 0) endGame("방역 실패: 변이 바이러스가 확산되었습니다.", false);
             if(wave >= maxWaves && enemies.length === 0 && gameActive) endGame("방역 대성공: 인류를 구했습니다!", true);
         }
