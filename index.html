@@ -333,6 +333,33 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             [{x:0, y:370}, {x:250, y:370}, {x:250, y:270}, {x:500, y:270}, {x:500, y:370}, {x:720, y:370}, {x:720, y:225}, {x:800, y:225}]
         ];
 
+        // 타워 설치 검증: 경로 위와 기존 타워 근처에는 설치할 수 없음
+        function pointToSegmentDistance(px, py, ax, ay, bx, by) {
+            const dx = bx - ax, dy = by - ay;
+            const len2 = dx * dx + dy * dy;
+            if (!len2) return Math.hypot(px - ax, py - ay);
+            const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+            return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+        }
+        function getTowerPlacementError(x, y, spec, ignoreIndex = -1) {
+            const radius = spec && spec.isMega ? 45 : 25;
+            if (x < radius || x > 800 - radius || y < radius || y > 450 - radius) return '맵 가장자리에는 설치할 수 없습니다.';
+            for (const path of paths) {
+                for (let i = 0; i < path.length - 1; i++) {
+                    if (pointToSegmentDistance(x, y, path[i].x, path[i].y, path[i+1].x, path[i+1].y) < radius + 12) {
+                        return '길 위에는 타워를 설치할 수 없습니다.';
+                    }
+                }
+            }
+            for (let i = 0; i < placedTowers.length; i++) {
+                if (i === ignoreIndex) continue;
+                const other = placedTowers[i];
+                const otherRadius = other.isMega ? 45 : 25;
+                if (Math.hypot(x - other.x, y - other.y) < radius + otherRadius + 5) return '다른 타워와 겹치거나 너무 가까워 설치할 수 없습니다.';
+            }
+            return '';
+        }
+
         // --- 타워 이미지 로드 ---
         const towerImages = {};
         for(let i=1; i<=15; i++) {
@@ -513,6 +540,8 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             const x=Math.max(25,Math.min(775,Number(document.getElementById('admin-x').value)||400));
             const y=Math.max(25,Math.min(425,Number(document.getElementById('admin-y').value)||225));
             if(placedTowers.length>=150){showAlert('타워 수 제한(150)에 도달했습니다.');return;}
+            const placementError = getTowerPlacementError(x, y, spec);
+            if (placementError) { showAlert(placementError); return; }
             placedTowers.push({...spec,x,y,level:1,priority:'first',cooldown:0,effectTimer:0,totalSpent:spec.cost,combo:0,comboTarget:null});
             spawnInstallEffect(x,y,spec.isMega);updateStat();updateShopUI();showAlert(`${spec.name} 관리자 설치 완료`);
         }
@@ -664,7 +693,17 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                     // 공격 자체는 하지 않고 주변 버프만 제공
                     t.cooldown=0; return;
                 }
-                if(t.isBank) return;
+                if(t.isBank) {
+                    t.incomeTimer = (t.incomeTimer || 0) + 1;
+                    if (t.incomeTimer >= 300) { // 약 5초마다 수익 (60fps 기준)
+                        t.incomeTimer = 0;
+                        const income = 50 * (t.level || 1);
+                        gold += income;
+                        updateStat();
+                        effects.push({x:t.x,y:t.y,r:8,maxR:38,type:'heal',alpha:1});
+                    }
+                    return;
+                }
                 if(t.cooldown > 0) t.cooldown--;
                 else {
                     if(t.id === 15) {
@@ -781,7 +820,8 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
                 const spec = towerSpecs[selectedTowerId];
                 const size = spec.isMega ? 90 : 50;
                 ctx.beginPath(); ctx.arc(mousePos.x, mousePos.y, spec.range, 0, Math.PI*2);
-                const canPlace = gold >= spec.cost;
+                const placementError = getTowerPlacementError(mousePos.x, mousePos.y, spec);
+                const canPlace = gold >= spec.cost && !placementError;
                 ctx.strokeStyle = canPlace ? "rgba(85,255,154,.65)" : "rgba(255,84,112,.7)"; ctx.setLineDash([7,7]); ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
                 ctx.beginPath();ctx.arc(mousePos.x,mousePos.y,Math.max(18,spec.range*.16)+Math.sin(Date.now()/140)*4,0,Math.PI*2);ctx.strokeStyle=canPlace?(spec.isMega?'rgba(93,247,255,.5)':'rgba(85,255,154,.4)'):'rgba(255,84,112,.5)';ctx.stroke();
                 ctx.globalAlpha = 0.5;
@@ -827,6 +867,8 @@ button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulatio
             }
             if(selectedTowerId) {
                 const spec = towerSpecs[selectedTowerId];
+                const placementError = getTowerPlacementError(x, y, spec);
+                if (placementError) { showAlert(placementError); return; }
                 if(gold >= spec.cost) {
                     gold -= spec.cost;
                     if(spec.isMega) {
