@@ -1,994 +1,265 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PHD: DEFENSE — V5 ULTIMATE</title>
-    <style>
-        body { text-align: center; background: #000; color: white; margin: 0; font-family: 'Courier New', Courier, monospace; overflow: hidden; touch-action: none; user-select: none; }
-        #game-container { position: relative; width: 800px; margin: 0 auto; overflow: hidden; }
-        canvas { background: #050505; border: 3px solid #2ecc71; display: block; max-width: 100%; height: auto; cursor: crosshair; transition: transform 0.1s; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 2000; background: rgba(0,0,0,0.85); }
-        .status-bar { background: #111; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2ecc71; font-weight: bold; font-size: 18px; }
-        #stat-text { letter-spacing: 1px; }
-        #alert-banner { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(231, 76, 60, 0.9); color: white; padding: 12px 30px; border-radius: 5px; font-weight: bold; z-index: 1500; display: none; border: 2px solid #fff; }
-        .shop { display: flex; gap: 8px; background: #000; padding: 15px; width: 100%; overflow-x: auto; border-top: 2px solid #444; position: fixed; bottom: 0; left: 0; }
-        .tower-card { background: #1a1a1a; padding: 8px; border-radius: 8px; min-width: 95px; border: 2px solid #333; font-size: 11px; cursor: pointer; transition: 0.2s; }
-        .tower-card.selected { border-color: #f1c40f; background: #222200; transform: translateY(-5px); }
-        .tower-card img { width: 40px; height: 40px; display: block; margin: 0 auto 5px; pointer-events: none; }
-        button { cursor: pointer; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; background: #2ecc71; color: white; margin: 5px; transition: 0.2s; }
-        button:hover { opacity: 0.8; }
-        #wave-btn { background: #fff; color: #000; font-size: 16px; padding: 10px 25px; border: 2px solid #2ecc71; }
-        #pause-btn { position: absolute; top: 10px; right: 10px; z-index: 1001; background: rgba(255,255,255,0.2); width: 40px; height: 40px; border: 1px solid #fff; color: white; }
-        #tower-info { font-size: 15px; background: rgba(255, 215, 0, 0.1); padding: 20px; border: 1px solid #f1c40f; border-radius: 10px; width: 320px; text-align: left; line-height: 1.6; }
-        .upgrade-btn { background: #f1c40f; color: #000; width: 100%; margin-top: 10px; padding: 12px; font-weight: bold; }
-        .sell-btn { background: #e74c3c; color: #fff; width: 100%; margin-top: 5px; padding: 10px; font-weight: bold; }
-        #dev-panel { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(17, 17, 17, 0.98); border: 2px solid #f1c40f; padding: 20px; z-index: 10000; border-radius: 12px; text-align: center; display: none; box-shadow: 0 0 30px #f1c40f; width: 300px; }
-        .dev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .dev-btn { background: #f1c40f; color: black; font-size: 12px; padding: 10px 5px; border-radius: 4px; font-weight: bold; }
-        #mute-btn { position: absolute; top: 10px; right: 60px; z-index: 1001; background: rgba(255,255,255,0.2); width: 40px; height: 40px; border: 1px solid #fff; color: white; font-size: 16px; }
-    
-/* ================= V5 ULTIMATE VISUAL OVERHAUL ================= */
-:root{--cyan:#5df7ff;--green:#55ff9a;--gold:#ffd45a;--red:#ff5470;--panel:rgba(7,12,22,.88);--line:rgba(93,247,255,.25)}
-*{box-sizing:border-box}
-body{background:radial-gradient(circle at 50% 0%,#12223b 0,#05070c 42%,#020308 100%);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.2px}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(rgba(93,247,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(93,247,255,.025) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(to bottom,black,transparent 85%);z-index:-1}
-#game-container{width:min(1100px,100vw);padding:0 10px;}
-canvas{width:100%;height:auto;aspect-ratio:16/9;border:1px solid rgba(93,247,255,.7);border-radius:16px;background:#03070d;box-shadow:0 0 0 1px rgba(255,255,255,.05) inset,0 0 35px rgba(0,220,255,.18),0 20px 60px rgba(0,0,0,.45);cursor:crosshair}
-.status-bar{position:sticky;top:0;z-index:1200;background:linear-gradient(180deg,rgba(10,17,30,.96),rgba(5,9,17,.92));backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:10px 14px;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
-#stat-text{font-weight:800;font-size:14px;text-shadow:0 0 12px rgba(93,247,255,.25)}
-#alert-banner{top:78px;background:linear-gradient(90deg,rgba(20,50,65,.97),rgba(8,18,30,.97));border:1px solid var(--cyan);box-shadow:0 0 25px rgba(93,247,255,.25);border-radius:999px;padding:10px 22px;backdrop-filter:blur(10px)}
-button{background:linear-gradient(135deg,#25d99a,#0ea77a);border:1px solid rgba(255,255,255,.15);box-shadow:0 8px 20px rgba(0,0,0,.25),0 0 18px rgba(37,217,154,.12);border-radius:10px;transition:transform .16s,filter .16s,box-shadow .16s}
-button:hover{opacity:1;transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 10px 26px rgba(0,0,0,.3),0 0 24px rgba(93,247,255,.18)}
-#start-screen{background:radial-gradient(circle at 50% 35%,rgba(15,66,85,.45),rgba(2,4,9,.96) 55%);overflow:hidden}
-#start-screen:before{content:"";position:absolute;width:620px;height:620px;border:1px solid rgba(93,247,255,.14);border-radius:50%;box-shadow:0 0 100px rgba(0,220,255,.1) inset;animation:spin 18s linear infinite}
-#start-screen h1{position:relative;font-size:clamp(42px,7vw,76px)!important;letter-spacing:6px;text-shadow:0 0 12px #ffd45a,0 0 45px rgba(255,212,90,.35);animation:titlePulse 2.8s ease-in-out infinite}
-#start-screen p,#start-screen div{position:relative;z-index:2}
-#start-screen button{min-width:140px;padding:15px 22px!important;font-size:15px;border-radius:14px}
-.shop{position:fixed;bottom:0;left:0;width:100%;padding:10px max(10px,calc((100vw - 1100px)/2));background:linear-gradient(180deg,rgba(2,5,10,.72),rgba(2,5,10,.97));border-top:1px solid rgba(93,247,255,.25);backdrop-filter:blur(16px);z-index:1300;gap:9px;scrollbar-width:thin}
-.tower-card{min-width:88px;background:linear-gradient(180deg,rgba(20,29,43,.95),rgba(8,13,21,.95));border:1px solid rgba(255,255,255,.1);padding:8px 7px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);position:relative;overflow:hidden}
-.tower-card:after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(93,247,255,.08),transparent);transform:translateX(-100%);transition:.35s}
-.tower-card:hover:after{transform:translateX(100%)}
-.tower-card.selected{border-color:var(--gold);background:linear-gradient(180deg,rgba(65,56,18,.9),rgba(20,18,8,.95));box-shadow:0 0 22px rgba(255,212,90,.2);transform:translateY(-6px)}
-.tower-card img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(93,247,255,.12))}
-#pause-screen,#result-screen{background:radial-gradient(circle at center,rgba(10,25,38,.78),rgba(0,0,0,.92));backdrop-filter:blur(10px)}
-#tower-info{background:linear-gradient(145deg,rgba(20,30,43,.98),rgba(5,10,18,.98));border:1px solid var(--gold);box-shadow:0 0 35px rgba(255,212,90,.16);width:min(360px,90vw);border-radius:18px}
-#dev-panel{background:linear-gradient(145deg,rgba(17,25,38,.99),rgba(4,8,15,.99));border-color:var(--gold);box-shadow:0 0 45px rgba(255,212,90,.2)}
-#mute-btn,#pause-btn{background:rgba(7,14,24,.75);border:1px solid rgba(255,255,255,.25);border-radius:10px;backdrop-filter:blur(8px)}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes titlePulse{50%{transform:scale(1.025);text-shadow:0 0 18px #ffd45a,0 0 70px rgba(255,212,90,.45)}}
-@keyframes blink{50%{opacity:.35}}
-@media(max-width:700px){.status-bar{font-size:12px;padding:8px}.status-bar #stat-text{font-size:11px;white-space:nowrap;overflow:hidden}.status-bar #wave-btn{font-size:12px;padding:8px 10px}.shop{padding:7px}.tower-card{min-width:72px;font-size:9px}.tower-card img{width:36px;height:36px}#pause-btn,#mute-btn{top:7px;width:34px;height:34px;padding:0}.shop{gap:6px}}
-
-
-/* V5 ULTIMATE MOBILE COMMAND DECK */
-html{background:#020308;min-height:100%;}
-body{min-height:100dvh;padding-bottom:env(safe-area-inset-bottom);}
-button,.tower-card{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-.shop{padding-bottom:max(8px,env(safe-area-inset-bottom));}
-@media (max-width:700px){
-  body{overflow:hidden;}
-  #game-container{width:100vw;padding:0 5px;}
-  canvas{width:100%;max-height:calc(100dvh - 145px);object-fit:contain;border-radius:10px;}
-  .status-bar{position:relative;min-height:42px;box-sizing:border-box;}
-  .status-bar #stat-text{max-width:58vw;}
-  #alert-banner{top:62px;max-width:86vw;font-size:12px;padding:9px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .shop{max-height:116px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
-  .tower-card{flex:0 0 auto;min-width:82px;min-height:76px;padding:7px 6px;scroll-snap-align:start;}
-  .tower-card img{width:38px;height:38px;}
-  #pause-screen,#result-screen{padding:12px;}
-  #tower-info{font-size:13px;padding:15px;max-height:72dvh;overflow:auto;}
-  #pause-screen button{min-height:48px;}
-}
-@media (max-width:700px) and (orientation:landscape){
-  .status-bar{padding:5px 8px;min-height:36px;}
-  canvas{max-height:calc(100dvh - 108px);}
-  .shop{max-height:82px;padding-top:5px;}
-  .tower-card{min-width:74px;min-height:62px;padding:4px;}
-  .tower-card img{width:30px;height:30px;}
-}
-
-
-/* ===== MOBILE + iPAD OPTIMIZATION PATCH ===== */
-html,body{width:100%;min-width:0;overscroll-behavior:none;-webkit-text-size-adjust:100%;}
-body{overflow:hidden;}
-#game-container{width:100%;max-width:1100px;margin:0 auto;padding:0 clamp(4px,1.5vw,12px);}
-canvas{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:16/9;touch-action:none;user-select:none;-webkit-user-select:none;box-sizing:border-box;}
-/* iPad/phone map fitting: the 800x450 game world keeps its ratio and is scaled to fit both viewport width and remaining height. */
-@media (max-width:1100px), (pointer: coarse){
-  #game-container{display:flex;flex-direction:column;align-items:center;max-height:calc(var(--app-vh, 100vh) - env(safe-area-inset-top) - env(safe-area-inset-bottom));}
-  #gameCanvas{flex:0 0 auto;width:min(100%, calc((var(--map-h, 450px))*1.7777778));height:auto;max-height:none;}
-}
-@media (orientation:landscape) and (max-height:850px){
-  #gameCanvas{width:min(100%, calc((var(--map-h, 450px))*1.7777778));}
-}
-
-.overlay{box-sizing:border-box;overflow:auto;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));-webkit-overflow-scrolling:touch;}
-.status-bar{padding-top:max(8px,env(safe-area-inset-top));}
-.shop{box-sizing:border-box;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));padding-bottom:max(8px,env(safe-area-inset-bottom));touch-action:pan-x;overscroll-behavior-x:contain;}
-.shop::-webkit-scrollbar{height:5px}.shop::-webkit-scrollbar-thumb{background:rgba(93,247,255,.35);border-radius:99px}
-button,.tower-card,#pause-btn,#mute-btn{min-height:44px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
-.tower-card{cursor:pointer;}
-#pause-screen,#result-screen,#start-screen{overscroll-behavior:contain;}
-#tower-info{max-width:calc(100vw - 24px);box-sizing:border-box;}
-
-/* phones */
-@media (max-width:600px){
-  #game-container{padding:0 4px;}
-  .status-bar{position:relative;padding:6px 6px;gap:5px;min-height:40px;}
-  #stat-text{font-size:10px!important;line-height:1.15;max-width:62vw;overflow:hidden;text-overflow:ellipsis;}
-  #wave-btn{font-size:11px!important;padding:8px 9px!important;margin:0;white-space:nowrap;}
-  #pause-btn,#mute-btn{top:5px;width:38px;height:38px;min-height:38px;margin:0;padding:0;}
-  #pause-btn{right:5px} #mute-btn{right:48px}
-  canvas{width:100%;max-height:calc(100svh - 158px);border-radius:9px;}
-  .shop{max-height:122px;padding-top:6px;gap:6px;}
-  .tower-card{min-width:78px;width:78px;min-height:78px;padding:6px 4px;font-size:9px;}
-  .tower-card img{width:36px;height:36px;margin-bottom:3px;}
-  #tower-info{width:min(94vw,360px);font-size:13px;padding:13px;line-height:1.45;max-height:70svh;overflow:auto;}
-  #start-screen h1{font-size:clamp(30px,11vw,52px)!important;letter-spacing:3px!important;}
-  #start-screen p{font-size:13px;margin-bottom:18px!important;}
-  #start-screen button{width:min(86vw,280px);min-height:48px;margin:5px 0;}
-  #alert-banner{top:48px;max-width:88vw;font-size:11px;padding:8px 12px;}
-}
-
-/* iPad / tablets */
-@media (min-width:601px) and (max-width:1100px){
-  #game-container{padding:0 8px;}
-  .status-bar{padding:9px 10px;}
-  canvas{max-height:calc(100svh - 150px);}
-  .shop{max-height:128px;}
-  .tower-card{min-width:84px;min-height:82px;}
-}
-
-/* iPad landscape / phone landscape */
-@media (max-height:600px) and (orientation:landscape){
-  .status-bar{padding:4px 7px;min-height:34px;}
-  #stat-text{font-size:10px!important;}
-  #wave-btn{font-size:10px!important;padding:6px 8px!important;}
-  canvas{max-height:calc(100svh - 92px);}
-  .shop{max-height:78px;padding-top:4px;padding-bottom:4px;}
-  .tower-card{min-width:72px;min-height:64px;padding:4px;font-size:8px;}
-  .tower-card img{width:28px;height:28px;}
-}
-
-/* devices with a home-indicator / notch */
-@supports (padding: max(0px)){
-  .shop{padding-bottom:max(8px,env(safe-area-inset-bottom));}
-  #start-screen,#pause-screen,#result-screen{padding-bottom:max(14px,env(safe-area-inset-bottom));}
-}
-
-
-#admin-key-gate{display:none;position:fixed;inset:0;z-index:19999;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
-#admin-key-gate>div{width:min(92vw,320px);background:#101a27;border:1px solid #5df7ff;border-radius:12px;padding:18px;box-shadow:0 0 30px #00bcd455}
-#dev-panel{width:min(94vw,420px);max-height:82dvh;overflow:auto;box-sizing:border-box;z-index:20000}
-#dev-panel input,#dev-panel select{width:100%;box-sizing:border-box;padding:9px;margin:4px 0;background:#0b1420;color:#eafaff;border:1px solid #426070;border-radius:6px;font-size:14px}
-#dev-panel .admin-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0}
-#dev-panel .admin-section{border:1px solid #294352;border-radius:8px;padding:9px;margin:9px 0;text-align:left}
-#dev-panel .admin-section strong{color:#5df7ff;font-size:13px}
-#dev-panel .dev-btn{min-height:38px;touch-action:manipulation}
-</style>
-
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>PHD: DEFENSE — V6 REMAKE</title>
 <style>
-#meta-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.meta-btn{background:#132638;color:#eafaff;border:1px solid #5df7ff;border-radius:9px;padding:8px 11px;font-weight:800;font-size:12px}
-.meta-overlay{display:none;position:fixed;inset:0;z-index:15000;background:rgba(1,5,12,.86);align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
-.meta-panel{width:min(94vw,620px);max-height:86dvh;overflow:auto;background:linear-gradient(145deg,#101d2b,#050a12);color:#eefaff;border:1px solid #5df7ff;border-radius:16px;padding:16px;box-shadow:0 0 35px #00d9ff33;box-sizing:border-box}
-.meta-panel h2{margin:0 0 10px;color:#5df7ff}.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}.meta-card{border:1px solid #294454;border-radius:10px;padding:11px;background:#0a1420}.meta-card button{width:100%;margin-top:8px;background:#145b56;color:white}.meta-card small{color:#aac4d3}.meta-close{background:#394b5b;color:white;width:100%;margin-top:12px}
-@media(max-width:600px){#meta-buttons{gap:4px}.meta-btn{padding:7px 8px;font-size:11px}.meta-panel{padding:12px;max-height:88dvh}.meta-grid{grid-template-columns:1fr}}
-</style>
-
-</head>
-<body>
-
-    <div id="admin-key-gate"><div><h3 style="color:#5df7ff;margin-top:0">🔐 ADMIN KEY</h3><p style="font-size:13px;color:#c5d6e4">해금 키 <b>D</b>를 입력하세요.</p><input id="admin-key-input" type="text" inputmode="text" maxlength="1" autocapitalize="characters" autocomplete="off" enterkeyhint="go" aria-label="관리자 해금 키" style="width:100%;box-sizing:border-box;padding:12px;background:#07101a;color:white;border:1px solid #426070;border-radius:7px;font-size:18px;text-align:center"><div class="admin-row"><button class="dev-btn" onclick="submitAdminKey()">확인</button><button class="dev-btn" onclick="cancelAdminKey()">취소</button></div></div></div>
-    <div id="dev-panel">
-        <h3>🛠️ MASTER DEBUG CONSOLE</h3>
-        <div class="admin-section"><strong>자원 제어</strong>
-          <div class="admin-row"><input id="admin-gold" type="number" min="0" value="2500" aria-label="자금"><input id="admin-lives" type="number" min="0" value="15" aria-label="생명력"></div>
-          <button class="dev-btn" onclick="adminSetResources()">자금·생명력 적용</button>
-        </div>
-        <div class="admin-section"><strong>웨이브 제어</strong>
-          <div class="admin-row"><input id="admin-wave" type="number" min="0" max="100" value="0" aria-label="웨이브"><button class="dev-btn" onclick="adminSetWave()">웨이브 설정</button></div>
-          <div class="admin-row"><button class="dev-btn" onclick="adminStartWave()">▶ 웨이브 시작</button><button class="dev-btn" onclick="cheatClearWave()">적 전체 제거</button></div>
-        </div>
-        <div class="admin-section"><strong>적 제어</strong>
-          <button class="dev-btn" onclick="adminSpawnEnemy()">적 1마리 생성</button>
-        </div>
-        <div class="admin-section"><strong>타워 제어</strong>
-          <select id="admin-tower-id" aria-label="타워 종류"></select>
-          <div class="admin-row"><input id="admin-x" type="number" min="25" max="775" value="400" aria-label="타워 X 좌표"><input id="admin-y" type="number" min="25" max="425" value="225" aria-label="타워 Y 좌표"></div>
-          <button class="dev-btn" onclick="adminPlaceTower()">좌표에 타워 설치</button>
-          <div class="admin-row"><button class="dev-btn" onclick="adminUpgradeLast()">최근 타워 강화</button><button class="dev-btn" onclick="adminSellLast()">최근 타워 판매</button></div>
-        </div>
-        <div class="admin-section"><strong>디버그 표시</strong>
-          <div class="admin-row"><button class="dev-btn" onclick="adminToggleRanges()">사거리 표시 전환</button><button class="dev-btn" onclick="adminToggleEnemyInfo()">적 정보 전환</button></div>
-          <div id="admin-debug-status" style="font-size:12px;color:#9cb4c5">사거리: 꺼짐 · 적 정보: 꺼짐</div>
-        </div>
-        <div class="dev-grid">
-            <button class="dev-btn" onclick="cheatGold()">💰 자금 무한</button>
-            <button class="dev-btn" onclick="cheatLives()">❤️ 생명 무적</button>
-            <button class="dev-btn" onclick="cheatOneShot()">🔥 원샷원킬</button>
-            <button class="dev-btn" onclick="setGameSpeed(1)">🏃 1배속</button>
-            <button class="dev-btn" onclick="setGameSpeed(2.5)">🚀 2.5배속</button>
-            <button class="dev-btn" onclick="setGameSpeed(0.5)">🐢 0.5배속</button>
-        </div>
-        <button class="dev-btn" onclick="closeDevPanel()" style="background:#e74c3c;color:white;width:100%;margin-top:12px;border:1px solid #fff;">닫기</button>
-    </div>
-
-    <div id="alert-banner">🚨 알림</div>
-
-    <div id="start-screen" class="overlay" style="display: flex;">
-        <h1 onclick="devCheck()" style="color: #f1c40f; font-size: 48px; cursor: pointer; margin-bottom: 10px;">PHD: DEFENSE</h1><div style="color:#5df7ff;font-weight:800;letter-spacing:5px;font-size:12px;margin-bottom:14px;">V5 ULTIMATE // BATTLE PROTOCOL</div>
-        <p style="color: #aaa; margin-bottom: 30px;">바이러스로부터 인류를 보호하세요.</p>
-        <div>
-            <button onclick="startGame(20)" style="background:#27ae60; padding: 15px 30px;">초급 (20W)</button>
-            <button onclick="startGame(30)" style="background:#f1c40f; color:#000; padding: 15px 30px;">중급 (30W)</button>
-            <button onclick="startGame(40)" style="background:#e74c3c; padding: 15px 30px;">전문 (40W)</button>
-        </div>
-        <p style="color: #666; font-size: 13px; margin-top: 25px; animation: blink 1.5s infinite;">💡 화면 아무 곳이나 터치/클릭하면 대기실 음악이 즉시 재생됩니다.</p>
-    </div>
-
-    <div id="pause-screen" class="overlay">
-        <h1 id="pause-heading" style="color: #f1c40f;">[ 시스템 정지 ]</h1>
-        <div id="tower-info-container"></div>
-        <button onclick="togglePause()" style="background:#2ecc71; margin-top:20px; width: 200px; height: 50px;">재개하기</button>
-    </div>
-
-    <div id="result-screen" class="overlay">
-        <h1 id="result-title"></h1>
-        <button onclick="location.reload()">다시 시작</button>
-    </div>
-
-    <div class="status-bar">
-        <div id="stat-text">자금: $2,500 | 생명: 15 | 웨이브: 0 / 0</div>
-        <div id="meta-buttons"><button class="meta-btn" onclick="openMeta('shop')">🛒 상점</button><button class="meta-btn" onclick="openMeta('achievements')">🏆 업적</button></div>
-        <button onclick="startWave()" id="wave-btn">웨이브 시작</button>
-    </div>
-
-    <div id="game-container">
-        <button id="mute-btn" onclick="toggleMute()">🔊</button>
-        <button id="pause-btn" onclick="togglePause()">||</button>
-        <canvas id="gameCanvas" width="800" height="450"></canvas>
-    </div>
-
-    <div class="shop" id="shop"></div>
-
-<div class="meta-overlay" id="meta-overlay" onclick="if(event.target===this)closeMeta()"><div class="meta-panel"><h2 id="meta-title">상점</h2><div id="meta-content"></div><button class="meta-close" onclick="closeMeta()">닫기</button></div></div>
-
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let gold = 2500, lives = 15, wave = 0, maxWaves = 20, gameActive = false, isPaused = false;
-        let enemies = [], placedTowers = [], selectedTowerId = null, mousePos = {x:0, y:0}, effects = [], summons = [], projectiles = [];
-        let ambientParticles = Array.from({length:85},()=>({x:Math.random()*800,y:Math.random()*450,r:Math.random()*1.8+.3,v:Math.random()*.35+.08,a:Math.random()*.45+.12}));
-        let shakeAmount = 0, flashAlpha = 0;
-        let devClickCount = 0, gameSpeed = 1;
-        let adminAwaitingKey = false, adminShowRanges = false, adminShowEnemyInfo = false;
-        let isMuted = false;
-        let attackBoostTicks=0, timeStopTicks=0, branchChoiceTower=null;
-        let totalBankIncome=0, bossesDefeated=0, totalUpgrades=0, totalKills=0, totalTowersPlaced=0;
-        let achievementState={};
-        try{achievementState=JSON.parse(localStorage.getItem('phd-v5-achievements')||'{}')||{};}catch(e){achievementState={};}
-        const achievementDefs=[
-          {id:'first_wave',name:'첫 출동',desc:'첫 웨이브 시작',test:()=>wave>=1,reward:500,medal:0},
-          {id:'wave10',name:'장기 방역',desc:'웨이브 10 도달',test:()=>wave>=10,reward:1500,medal:1},
-          {id:'wave20',name:'최종 방어선',desc:'웨이브 20 도달',test:()=>wave>=20,reward:3000,medal:2},
-          {id:'first_bank',name:'경제 기반',desc:'집중실 첫 설치',test:()=>placedTowers.some(t=>t.isBank)||totalBankIncome>0,reward:700,medal:0},
-          {id:'bank10k',name:'투자 회수',desc:'집중실 누적 수익 $10,000',test:()=>totalBankIncome>=10000,reward:1500,medal:1},
-          {id:'bank100k',name:'경제 제국',desc:'집중실 누적 수익 $100,000',test:()=>totalBankIncome>=100000,reward:5000,medal:3},
-          {id:'upgrade10',name:'기술 진보',desc:'타워 강화 10회',test:()=>totalUpgrades>=10,reward:1200,medal:1},
-          {id:'towers10',name:'방어망 구축',desc:'타워 10개 설치',test:()=>totalTowersPlaced>=10,reward:1000,medal:1},
-          {id:'boss5',name:'보스 사냥꾼',desc:'보스 3마리 처치',test:()=>bossesDefeated>=3,reward:4000,medal:3},
-          {id:'kills100',name:'박멸 작전',desc:'적 100마리 처치',test:()=>totalKills>=100,reward:2000,medal:1}
-        ];
-        function saveAchievementState(){try{localStorage.setItem('phd-v5-achievements',JSON.stringify(achievementState));}catch(e){}}
-        function checkAchievements(){let changed=false;for(const a of achievementDefs){if(!achievementState[a.id]&&a.test()){achievementState[a.id]={claimed:true,at:Date.now()};gold+=a.reward;changed=true;createToast(`🏆 업적 달성: ${a.name} +$${a.reward}`);}}if(changed){saveAchievementState();updateStat();}}
-        function openMeta(which){const overlay=document.getElementById('meta-overlay');overlay.style.display='flex';renderMeta(which);}
-        function closeMeta(){document.getElementById('meta-overlay').style.display='none';}
-        function renderMeta(which){const title=document.getElementById('meta-title'),content=document.getElementById('meta-content');
-          if(which==='achievements'){title.textContent='🏆 업적 / 보상';content.innerHTML=`<p>업적 보상 골드는 타워 설치·강화와 상점에서 공통으로 사용됩니다. 배지는 별도 누적됩니다.</p><div class="meta-grid">${achievementDefs.map(a=>{const done=!!achievementState[a.id];return `<div class="meta-card"><b>${done?'✅':'🔒'} ${a.name}</b><p>${a.desc}</p><small>${done?'달성 완료':'보상'} · $${a.reward.toLocaleString()}${a.medal?' · 🏅 배지 '+a.medal:''}</small></div>`}).join('')}</div><p>누적 배지: 🏅 ${achievementDefs.reduce((n,a)=>n+(a.medal&&achievementState[a.id]?a.medal:0),0)}</p>`;return;}
-          title.textContent='🛒 전투 상점';const items=[
-            {id:'repair',name:'🚑 긴급 수리',desc:'생명력 3 회복 (최대 15)',cost:2000},
-            {id:'boost',name:'⚡ 공격력 강화',desc:'20초 동안 타워 공격력 +50%',cost:3000},
-            {id:'cash',name:'💰 긴급 자금',desc:'즉시 $4,000 획득',cost:1500},
-            {id:'freeze',name:'⏸️ 시간 정지',desc:'10초 동안 적 이동·공격 정지',cost:5000}
-          ];content.innerHTML=`<p>보유 골드: <b style="color:#ffd45a">$${gold.toLocaleString()}</b></p><p>상품별 구매 제한은 한 게임 기준이며, 새 게임을 시작하면 초기화됩니다.</p><div class="meta-grid">${items.map(i=>{const left=shopItemLimits[i.id]-shopItemPurchases[i.id];const blocked=left<=0||(i.id==='repair'&&lives>=15)||gold<i.cost;return `<div class="meta-card"><b>${i.name}</b><p>${i.desc}</p><small>가격: $${i.cost.toLocaleString()}</small><p><small>남은 구매 횟수: <b>${left}/${shopItemLimits[i.id]}</b></small></p><button ${blocked?'disabled':''} style="${blocked?'opacity:.45;cursor:not-allowed;':''}" onclick="buyMetaItem('${i.id}')">${left<=0?'구매 한도 도달':(i.id==='repair'&&lives>=15?'생명력 최대': '구매')}</button></div>`}).join('')}</div>`;
-        }
-        function buyMetaItem(id){const prices={repair:2000,boost:3000,cash:1500,freeze:5000};const price=prices[id];if(!price||!(id in shopItemLimits)){showAlert('잘못된 상품입니다.');return;}if(shopItemPurchases[id]>=shopItemLimits[id]){showAlert('이 상품의 이번 게임 구매 한도에 도달했습니다!');renderMeta('shop');return;}if(gold<price){showAlert('골드가 부족합니다!');return;}if(id==='repair'&&lives>=15){showAlert('생명력이 이미 가득 찼습니다.');return;}gold-=price; if(id==='repair')lives=Math.min(15,lives+3);else if(id==='boost')attackBoostTicks=Math.max(attackBoostTicks,1200);else if(id==='cash')gold+=4000;else if(id==='freeze')timeStopTicks=Math.max(timeStopTicks,600);shopItemPurchases[id]++;updateStat();renderMeta('shop');createToast(`🛒 구매 완료 · 남은 횟수 ${shopItemLimits[id]-shopItemPurchases[id]}`);}
-        function chooseTowerBranch(idx,branch){const t=placedTowers[idx];if(!t||t.branch)return;t.branch=branch;if(branch==='assault'){t.dmg*=1.35;t.fireRate*=.9;}else{t.range*=1.25;if(t.isBank){t.bankIncomeBonus=1.5;}if(t.id===10)t.healBonus=1;}updateTowerPanel(idx);createToast(branch==='assault'?'⚔️ 공격 특화 경로 선택':'🛡️ 지원 특화 경로 선택');}
-
-        let currentBgm = null;
-
-        // --- 🎵 오디오 시스템 및 볼륨 설정 ---
-        const audioCtx = {
-            bgmMain: new Audio('static/sounds/bgm_main.mp3'),
-            bgmBattle: new Audio('static/sounds/bgm_battle.mp3'),
-            bgmBoss: new Audio('static/sounds/bgm_boss.mp3'),
-            shoot: new Audio('static/sounds/shoot.mp3'),
-            megaShoot: new Audio('static/sounds/mega_shoot.mp3'),
-            upgrade: new Audio('static/sounds/upgrade.mp3'),
-            megaBuild: new Audio('static/sounds/mega_build.mp3'),
-            victory: new Audio('static/sounds/victory.mp3'),
-            defeat: new Audio('static/sounds/defeat.mp3')
-        };
-
-        audioCtx.bgmMain.loop = true;  audioCtx.bgmMain.volume = 0.15;
-        audioCtx.bgmBattle.loop = true; audioCtx.bgmBattle.volume = 0.15;
-        audioCtx.bgmBoss.loop = true;   audioCtx.bgmBoss.volume = 0.2;
-        audioCtx.shoot.volume = 0.3;
-        audioCtx.megaShoot.volume = 0.5;
-        audioCtx.upgrade.volume = 0.6;
-        audioCtx.megaBuild.volume = 0.7;
-        audioCtx.victory.volume = 0.6;
-        audioCtx.defeat.volume = 0.6;
-
-        // BGM 변경 함수
-        function switchBGM(newBgm) {
-            if (currentBgm === newBgm) return;
-            if (currentBgm) currentBgm.pause();
-
-            currentBgm = newBgm;
-            if (!isMuted && currentBgm) {
-                currentBgm.currentTime = 0;
-                currentBgm.play().catch(e => console.log("BGM 재생 보류: ", e));
-            }
-        }
-
-        // [핵심 변경] 창을 열고 화면 전체(또는 스타트 스크린) 어디든 첫 상호작용이 일어나면 무조건 대기음악 강제 재생
-        function initMainBGM() {
-            if (!isMuted && !gameActive && currentBgm !== audioCtx.bgmMain) {
-                currentBgm = audioCtx.bgmMain;
-                currentBgm.play()
-                    .then(() => {
-                        // 성공적으로 재생되면 이벤트 리스너 제거 (중복 실행 방지)
-                        window.removeEventListener('click', initMainBGM);
-                        window.removeEventListener('touchstart', initMainBGM);
-                    })
-                    .catch(e => console.log("브라우저 자동재생 차단 우회 중...", e));
-            }
-        }
-        // 창 열리자마자 사용자가 마우스를 클릭하거나 화면을 터치하는 순간을 감지
-        window.addEventListener('click', initMainBGM);
-        window.addEventListener('touchstart', initMainBGM);
-
-        function playSound(audioTrack) {
-            if (isMuted) return;
-            const soundClone = audioTrack.cloneNode();
-            soundClone.volume = audioTrack.volume;
-            soundClone.play().catch(e => console.log(e));
-        }
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            const muteBtn = document.getElementById('mute-btn');
-            if (isMuted) {
-                muteBtn.innerText = "🔇";
-                if(currentBgm) currentBgm.pause();
-            } else {
-                muteBtn.innerText = "🔊";
-                if (currentBgm && !isPaused) {
-                    currentBgm.play().catch(e => console.log(e));
-                }
-            }
-        }
-
-        // --- 경로 설정 ---
-        const paths = [
-            [{x:0, y:80}, {x:200, y:80}, {x:200, y:180}, {x:400, y:180}, {x:400, y:80}, {x:650, y:80}, {x:650, y:225}, {x:800, y:225}],
-            [{x:0, y:370}, {x:250, y:370}, {x:250, y:270}, {x:500, y:270}, {x:500, y:370}, {x:720, y:370}, {x:720, y:225}, {x:800, y:225}]
-        ];
-
-        // --- 타워 이미지 로드 ---
-        const towerImages = {};
-        for(let i=1; i<=15; i++) {
-            towerImages[i] = new Image();
-            towerImages[i].src = `static/images/tower_${String(i).padStart(2, '0')}.png`;
-        }
-
-        const towerNames = ["KF94", "손소독", "자가키트", "열화상", "소독차", "선별소", "조사관", "드라이브", "본부", "치료소", "격리동", "구급단", "집중실", "국가 백신소", "스마트 앰뷸"];
-        const towerSpecs = {};
-
-        for(let i=1; i<=15; i++) {
-            let baseCost = (i<=5)?300:(i<=10)?1000:3500;
-            let finalCost = Math.floor((baseCost + (Math.pow(i, 2.3) * 25)) / 10) * 10;
-            if(i === 13) finalCost = 350;
-            towerSpecs[i] = {
-                id: i, name: towerNames[i-1], cost: finalCost, dmg: 75 + (i * 25),
-                range: 155 + (i * 15), fireRate: Math.max(5, 30 - i),
-                limit: (i <= 3) ? 15 : (i <= 12) ? 5 : (i === 13) ? 2 : 1,
-                isMega: (i >= 14), isBank: (i === 13)
-            };
-        }
-        towerSpecs[14].dmg = 20000;
-        towerSpecs[15].dmg = 50000;
-
-        // --- 타워 성장/능력 시스템 ---
-        const priorityNames = {first:'선두', last:'후미', strong:'강적', weak:'약적', close:'근접'};
-        const abilityTable = {
-            1:[['감속탄','명중한 적의 이동 속도를 낮춥니다.','Lv.3: 주변 적까지 감속'],['광역 소독','명중 지점 주변에 추가 피해를 줍니다.','Lv.3: 광역 범위 증가'],['진단 표식','표식 대상은 추가 피해를 받습니다.','Lv.3: 표식 지속/효과 증가'],['열감지','은신 적을 감지하고 추가 피해를 줍니다.','Lv.3: 은신 대상 추가 피해 강화'],['소독 분사','대상 주변에 범위 피해를 줍니다.','Lv.3: 범위와 피해 증가'],['선별 강화','체력이 낮은 적에게 추가 피해를 줍니다.','Lv.3: 약적 우선 공격 강화'],['약점 조사','명중한 적에게 약점 표식을 남깁니다.','Lv.3: 표식 피해 증가'],['고속 대응','공격 주기가 짧습니다.','Lv.3: 추가 연속 사격'],['지휘 버프','주변 타워의 공격력을 높입니다.','Lv.3: 공격속도까지 강화'],['회복 지원','주기적으로 생명력을 회복합니다.','Lv.3: 회복량 증가'],['격리 구역','적의 이동을 크게 둔화합니다.','Lv.3: 강적을 잠시 정지'],['구급 돌진','강적/보스에게 추가 피해를 줍니다.','Lv.3: 추가 피해 강화'],['집중 사격','같은 적을 계속 공격하면 피해가 누적됩니다.','Lv.3: 보스에게도 누적 효과'],['백신 네트워크','주변 타워를 강화합니다.','Lv.3: 일시적 전체 버프'],['스마트 추적','위험도가 높은 적을 추적합니다.','Lv.3: 강적 자동 추적 강화']],
-            2:[['감속탄+','감속 효과가 강해집니다.','Lv.3: 주변 적까지 감속'],['광역 소독+','추가 피해 범위가 넓어집니다.','Lv.3: 광역 범위 증가'],['진단 표식+','표식 대상 추가 피해가 증가합니다.','Lv.3: 표식 지속/효과 증가'],['열감지+','은신 대상에게 추가 피해를 줍니다.','Lv.3: 은신 대상 추가 피해 강화'],['소독 분사+','범위 피해가 강화됩니다.','Lv.3: 범위와 피해 증가'],['선별 강화+','약적에게 더 강하게 공격합니다.','Lv.3: 약적 우선 공격 강화'],['약점 조사+','약점 표식 효과가 강화됩니다.','Lv.3: 표식 피해 증가'],['고속 대응+','공격 속도가 크게 증가합니다.','Lv.3: 추가 연속 사격'],['지휘 버프+','주변 타워 공격력이 증가합니다.','Lv.3: 공격속도까지 강화'],['회복 지원+','생명력 회복 주기가 짧아집니다.','Lv.3: 회복량 증가'],['격리 구역+','감속 효과가 강해집니다.','Lv.3: 강적을 잠시 정지'],['구급 돌진+','강적/보스 추가 피해가 증가합니다.','Lv.3: 추가 피해 강화'],['집중 사격+','연속 명중 피해가 더 빠르게 증가합니다.','Lv.3: 보스에게도 누적 효과'],['백신 네트워크+','버프 범위가 넓어집니다.','Lv.3: 일시적 전체 버프'],['스마트 추적+','강적 탐지와 우선순위가 강화됩니다.','Lv.3: 강적 자동 추적 강화']]
-        };
-        function abilityText(t){
-            const row=abilityTable[t.level][t.id-1];
-            return `<b style="color:#5df7ff">${row[0]}</b><br><span style="color:#ddd">${row[1]}</span><br><small style="color:#ffd45a">${row[2]}</small>`;
-        }
-        function cyclePriority(idx){
-            const t=placedTowers[idx]; if(!t) return;
-            const order=['first','last','strong','weak','close'];
-            t.priority=order[(order.indexOf(t.priority||'first')+1)%order.length];
-            updateTowerPanel(idx);
-        }
-        function updateTowerPanel(idx){
-            const t=placedTowers[idx]; if(!t) return;
-            const nextCost=Math.floor(t.cost*(t.level===1?2.5:4.0));
-            document.getElementById('tower-info-container').innerHTML=`
-            <div id="tower-info">
-                <b style="font-size:20px;color:${t.isMega?'#00ffff':'#2ecc71'}">${t.isMega?'🔥 MEGA UNIT 🔥 ':''}${t.name}</b><br>
-                <div style="margin:8px 0;color:#f1c40f;font-size:16px">${'★'.repeat(t.level)}${'☆'.repeat(3-t.level)}　Lv.${t.level}</div>
-                <div style="background:rgba(93,247,255,.08);padding:10px;border-radius:10px;margin:8px 0">${abilityText(t)}</div>
-                <div style="margin-top:8px">공격 우선순위: <b style="color:#ffd45a">${priorityNames[t.priority||'first']}</b></div>
-                <button class="upgrade-btn" onclick="upgradeTower(${idx})" ${t.level>=3?'disabled':''}>${t.level>=3?'✨ 최종 진화 완료':'⚡ Lv.'+(t.level+1)+' 진화 ($'+nextCost+')'}</button>
-                ${t.level>=2&&!t.branch?`<div style="margin:8px 0;color:#5df7ff">분기 강화 선택</div><button class="upgrade-btn" onclick="chooseTowerBranch(${idx},'assault')">⚔️ 공격 특화 (+35% 공격력)</button><button class="upgrade-btn" onclick="chooseTowerBranch(${idx},'support')">🛡️ 지원 특화 (+25% 사거리/지원 효과)</button>`:t.branch?`<div style="color:#5df7ff;margin:7px 0">분기: ${t.branch==='assault'?'⚔️ 공격 특화':'🛡️ 지원 특화'}</div>`:''}
-                <button class="upgrade-btn" onclick="cyclePriority(${idx})" style="background:#5df7ff;margin-top:7px">🎯 우선순위 변경</button>
-                <button class="sell-btn" onclick="sellTower(${idx})">데이터 삭제 (철거)</button>
-            </div>`;
-        }
-        function getTowerTarget(t){
-            const candidates=enemies.filter(e=>Math.hypot(e.x-t.x,e.y-t.y)<t.range && (t.id===4 || !e.stealth || t.id===4 || t.id===15));
-            if(!candidates.length) return null;
-            const p=t.priority||'first';
-            if(p==='first') return candidates.reduce((a,b)=>(b.progress>a.progress?b:a));
-            if(p==='last') return candidates.reduce((a,b)=>(b.progress<a.progress?b:a));
-            if(p==='strong') return candidates.reduce((a,b)=>(b.hp>a.hp?b:a));
-            if(p==='weak') return candidates.reduce((a,b)=>(b.hp<a.hp?b:a));
-            return candidates.reduce((a,b)=>(Math.hypot(b.x-t.x,b.y-t.y)<Math.hypot(a.x-t.x,a.y-t.y)?b:a));
-        }
-
-
-        function spawnInstallEffect(x,y,isMega=false){
-            effects.push({x,y,r:8,maxR:isMega?95:58,type:'install',alpha:1});
-            effects.push({x,y,r:3,maxR:isMega?170:100,type:'install2',alpha:.9});
-            for(let i=0;i<(isMega?34:18);i++){
-                const a=Math.random()*Math.PI*2, sp=(isMega?2.5:1.3)+Math.random()*3;
-                effects.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:Math.random()*2+1,type:'installParticle',alpha:1,color:isMega?'#5df7ff':(Math.random()>.5?'#55ff9a':'#ffd45a')});
-            }
-            if(isMega){shakeAmount=35;flashAlpha=.28;}
-        }
-        function spawnShootProjectile(x,y,tx,ty,isMega=false){
-            projectiles.push({x,y,tx,ty,life:0,maxLife:isMega?9:7,isMega,trail:[]});
-        }
-        function createToast(text,kind='info'){
-            const b=document.getElementById('alert-banner');
-            b.innerText=text;b.dataset.kind=kind;b.style.display='block';
-            clearTimeout(createToast.timer);createToast.timer=setTimeout(()=>b.style.display='none',2200);
-        }
-        const shopItemLimits = { repair: 3, boost: 3, cash: 4, freeze: 2 };
-        let shopItemPurchases = { repair: 0, boost: 0, cash: 0, freeze: 0 };
-        function resetShopItemLimits(){ shopItemPurchases = { repair: 0, boost: 0, cash: 0, freeze: 0 }; }
-        function startGame(waves) {
-            maxWaves = waves;
-            resetShopItemLimits();
-            // 게임을 시작하면 대기실 리스너를 확실하게 지워 안전장치 마련
-            window.removeEventListener('click', initMainBGM);
-            window.removeEventListener('touchstart', initMainBGM);
-
-            document.getElementById('start-screen').style.display = 'none';
-            gameActive = true;
-            updateStat();
-            updateShopUI(); checkAchievements();
-
-            // 일반 전투 음악으로 전환
-            switchBGM(audioCtx.bgmBattle);
-            draw();
-        }
-
-        function togglePause() {
-            if(!gameActive) return;
-            isPaused = !isPaused;
-            document.getElementById('pause-screen').style.display = isPaused ? 'flex' : 'none';
-            if (!isMuted && currentBgm) {
-                if (isPaused) currentBgm.pause();
-                else currentBgm.play().catch(e => console.log(e));
-            }
-        }
-
-        function devCheck() {
-            devClickCount++;
-            if (devClickCount >= 5) {
-                devClickCount = 0;
-                adminAwaitingKey = true;
-                document.getElementById('admin-key-gate').style.display='flex';
-                setTimeout(()=>document.getElementById('admin-key-input').focus(),80);
-                showAlert("🔐 해금 키 D를 입력하세요.");
-            }
-        }
-        window.addEventListener('keydown', (e) => {
-            if (adminAwaitingKey && e.key.toLowerCase() === 'd' && e.target.id !== 'admin-key-input') {
-                adminAwaitingKey = false;
-                document.getElementById('admin-key-gate').style.display='none';
-                const panel=document.getElementById('dev-panel');
-                panel.style.display='block';
-                const select=document.getElementById('admin-tower-id');
-                if(select && !select.options.length) for(let i=1;i<=15;i++){const o=document.createElement('option');o.value=i;o.textContent=`${towerSpecs[i].name} ($${towerSpecs[i].cost})`;select.appendChild(o);}
-                showAlert('🔓 ADMIN TOOL 활성화');
-            } else if (e.key === 'Escape') closeDevPanel();
-        });
-        function submitAdminKey(){
-            const input=document.getElementById('admin-key-input');
-            if((input.value||'').trim().toLowerCase()!=='d'){showAlert('해금 키가 올바르지 않습니다.');input.value='';input.focus();return;}
-            adminAwaitingKey=false;document.getElementById('admin-key-gate').style.display='none';input.value='';
-            const panel=document.getElementById('dev-panel');panel.style.display='block';
-            const select=document.getElementById('admin-tower-id');
-            if(select && !select.options.length) for(let i=1;i<=15;i++){const o=document.createElement('option');o.value=i;o.textContent=`${towerSpecs[i].name} ($${towerSpecs[i].cost})`;select.appendChild(o);}
-            showAlert('🔓 ADMIN TOOL 활성화');
-        }
-        function cancelAdminKey(){adminAwaitingKey=false;document.getElementById('admin-key-gate').style.display='none';document.getElementById('admin-key-input').value='';}
-        // 관리자 도구는 시작 화면에서 열어도 게임 루프가 정상 작동하도록 준비한다.
-        function adminEnsureGameActive(){
-            if(gameActive) return;
-            document.getElementById('start-screen').style.display='none';
-            gameActive=true;
-            updateStat();
-            updateShopUI();
-            switchBGM(audioCtx.bgmBattle);
-            draw();
-        }
-        function adminSetResources(){
-            gold=Math.max(0,Math.floor(Number(document.getElementById('admin-gold').value)||0));
-            lives=Math.max(0,Math.floor(Number(document.getElementById('admin-lives').value)||0));
-            updateStat();showAlert('자금과 생명력을 적용했습니다.');
-        }
-        function adminSetWave(){
-            adminEnsureGameActive();
-            wave=Math.max(0,Math.min(maxWaves,Math.floor(Number(document.getElementById('admin-wave').value)||0)));
-            enemies=[];
-            document.getElementById('wave-btn').disabled=false;
-            updateStat();showAlert(`웨이브 ${wave} 설정 완료`);
-        }
-        function adminStartWave(){
-            adminEnsureGameActive();
-            if(enemies.length) enemies=[];
-            startWave();
-        }
-        function adminSpawnEnemy(){
-            adminEnsureGameActive();
-            if(!wave) wave=1;
-            const pIdx=Math.floor(Math.random()*paths.length), p=paths[pIdx], hp=160*Math.pow(1.28,Math.max(1,wave));
-            enemies.push({pIdx,node:0,x:p[0].x,y:p[0].y,progress:0,hp,maxHp:hp,speed:2,size:24,type:'ADMIN TEST',color:'#ff4dff',bounty:100,stealth:false,marked:0,weakness:0,slowTimer:0,freezeTimer:0});
-            updateStat();showAlert('테스트 적 1마리를 생성했습니다.');
-        }
-
-        function isInvalidTowerSpot(x,y,radius=25){
-            for(const path of paths){for(let i=0;i<path.length-1;i++){const a=path[i],b=path[i+1],dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy;const t=len2?Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/len2)):0;const px=a.x+t*dx,py=a.y+t*dy;if(Math.hypot(x-px,y-py)<radius+22)return '경로';}}
-            if(placedTowers.some(t=>Math.hypot(t.x-x,t.y-y)<radius+(t.isMega?55:25)))return '다른 타워';
-            return '';
-        }
-        function adminPlaceTower(){
-            adminEnsureGameActive();
-            const id=Number(document.getElementById('admin-tower-id').value)||1, spec=towerSpecs[id];
-            const x=Math.max(25,Math.min(775,Number(document.getElementById('admin-x').value)||400));
-            const y=Math.max(25,Math.min(425,Number(document.getElementById('admin-y').value)||225));
-            if(placedTowers.length>=150){showAlert('타워 수 제한(150)에 도달했습니다.');return;}
-            const invalid=isInvalidTowerSpot(x,y,spec.isMega?55:25);if(invalid){showAlert(invalid==='경로'?'경로 위에는 설치할 수 없습니다.':'타워가 겹치지 않게 설치하세요.');return;}
-            placedTowers.push({...spec,x,y,level:1,priority:'first',cooldown:0,effectTimer:0,totalSpent:spec.cost,combo:0,comboTarget:null,bankTimer:300});
-            spawnInstallEffect(x,y,spec.isMega);updateStat();updateShopUI();showAlert(`${spec.name} 관리자 설치 완료`);
-        }
-        function adminUpgradeLast(){const i=placedTowers.length-1;if(i<0){showAlert('강화할 타워가 없습니다.');return;}const t=placedTowers[i];if(t.level>=3){showAlert('이미 최대 레벨입니다.');return;}gold= Math.max(gold,Math.floor(t.cost*(t.level===1?2.5:4)));upgradeTower(i);}
-        function adminSellLast(){const i=placedTowers.length-1;if(i<0){showAlert('판매할 타워가 없습니다.');return;}const t=placedTowers.splice(i,1)[0];gold+=Math.floor(t.totalSpent*.7);updateStat();updateShopUI();showAlert(`${t.name} 판매 완료`);}
-        function adminToggleRanges(){adminShowRanges=!adminShowRanges;adminUpdateDebugStatus();}
-        function adminToggleEnemyInfo(){adminShowEnemyInfo=!adminShowEnemyInfo;adminUpdateDebugStatus();}
-        function adminUpdateDebugStatus(){const e=document.getElementById('admin-debug-status');if(e)e.textContent=`사거리: ${adminShowRanges?'켜짐':'꺼짐'} · 적 정보: ${adminShowEnemyInfo?'켜짐':'꺼짐'}`;}
-
-        function cheatGold() { gold = 99999999; updateStat(); showAlert("💰 자금이 무한으로 설정되었습니다."); }
-        function cheatClearWave() { enemies = []; showAlert("⚡ 현재 웨이브의 바이러스를 박멸했습니다."); }
-        function cheatLives() { lives = 9999; updateStat(); showAlert("❤️ 방역 생명력이 무적으로 설정되었습니다."); }
-        function cheatOneShot() {
-
-            // Ambient particles keep the battlefield alive without affecting gameplay.
-            ambientParticles.forEach(p=>{p.y-=p.v;if(p.y<-4){p.y=454;p.x=Math.random()*800;}p.a=.1+Math.sin((Date.now()/700)+p.x)*.12});
-            projectiles=projectiles.filter(p=>{p.life++;p.trail.push({x:p.x,y:p.y});if(p.trail.length>5)p.trail.shift();const k=p.life/p.maxLife;p.x=p.x+(p.tx-p.x)*.42;p.y=p.y+(p.ty-p.y)*.42;return p.life<p.maxLife;});
-
-            placedTowers.forEach(t => { t.dmg = 99999999; });
-            for(let id in towerSpecs) { towerSpecs[id].dmg = 99999999; }
-            showAlert("🔥 모든 타워가 즉사 데미지로 변경되었습니다.");
-        }
-        function setGameSpeed(s) { gameSpeed = s; showAlert(`🚀 게임 속도가 ${s}배속으로 설정되었습니다.`); }
-        function closeDevPanel() { document.getElementById('dev-panel').style.display = 'none'; }
-
-        canvas.addEventListener('pointermove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            mousePos.x = (e.clientX - rect.left) * (800 / rect.width);
-            mousePos.y = (e.clientY - rect.top) * (450 / rect.height);
-            if(e.pointerType==='touch') e.preventDefault();
-        });
-
-        function startWave() {
-            if(!gameActive || enemies.length > 0) return;
-            wave++; checkAchievements();
-
-            if (wave % 10 === 0) {
-                createToast(`🚨 WARNING  //  BOSS WAVE ${wave}`);
-                switchBGM(audioCtx.bgmBoss);
-            } else {
-                switchBGM(audioCtx.bgmBattle);
-            }
-
-            gold += (300 + (wave * 50) + placedTowers.filter(t=>t.isBank).reduce((sum,t)=>sum + 1000 * t.level, 0));
-            updateStat();
-            let count = 0;
-            let spawnInterval = setInterval(() => {
-                if(isPaused) return;
-                const pIdx = Math.floor(Math.random() * 2);
-                const rand = Math.random();
-                let type = "인플루엔자", hpMult = 1, speed = 2.4, color = "lime", size = 28, bounty = 20;
-
-                let stealth=false;
-                if (wave % 10 === 0 && count === 0) { type = "COVID-19"; hpMult = 45 + wave*1.5; speed = 0.9; color = "red"; size = 65; bounty = 1500 + wave*100; }
-                else if (rand < 0.12) { type = "은신 바이러스"; hpMult = 1.4; speed = 3.6; color = "#8e7dff"; size = 25; bounty = 35; stealth=true; }
-                else if (rand < 0.27) { type = "노로바이러스"; hpMult = 0.5; speed = 4.2; color = "yellow"; size = 22; bounty = 15; }
-                else if (rand < 0.42) { type = "에볼라"; hpMult = 3.0; speed = 1.2; color = "purple"; size = 35; bounty = 50; }
-
-                const hp = 160 * Math.pow(1.28, wave) * hpMult;
-                enemies.push({
-                    pIdx, node: 0, x: paths[pIdx][0].x, y: paths[pIdx][0].y, progress:0,
-                    hp, maxHp: hp, speed, size, type, color, bounty, stealth, marked:0, weakness:0, slowTimer:0, freezeTimer:0
-                });
-                if (++count >= 10 + wave) clearInterval(spawnInterval);
-            }, 600 / gameSpeed);
-        }
-
-        function upgradeTower(idx) {
-            const t=placedTowers[idx]; if(!t||t.level>=3) return;
-            const upgradeCost=Math.floor(t.cost*(t.level===1?2.5:4.0));
-            if(gold<upgradeCost){showAlert(`자금 부족! ($${upgradeCost})`);return;}
-            gold-=upgradeCost; t.totalSpent+=upgradeCost; t.level++; totalUpgrades++;
-            t.dmg*=t.isMega?5.0:2.5; t.fireRate*=.6;
-            if(t.id===2||t.id===5) t.range*=1.08;
-            if(t.id===9||t.id===14) t.range*=1.18;
-            if(t.id===10) t.healTimer=1;
-            if(t.isMega) shakeAmount=30;
-            effects.push({x:t.x,y:t.y,r:10,maxR:t.isMega?300:100,type:'upgrade',alpha:1});
-            playSound(audioCtx.upgrade); updateStat(); updateTowerPanel(idx);
-            showAlert(`✨ ${t.name} Lv.${t.level} 진화 완료!`);
-        }
-
-        function sellTower(idx) {
-            const t = placedTowers[idx]; gold += Math.floor(t.totalSpent * 0.7);
-            placedTowers.splice(idx, 1);
-            updateStat(); updateShopUI(); togglePause();
-        }
-
-        function draw() {
-            if(!gameActive) return;
-            for(let step=0; step < (isPaused ? 0 : gameSpeed === 2.5 ? 3 : 1); step++) {
-                updateGame();
-            }
-            render();
-            requestAnimationFrame(draw);
-        }
-
-        function updateGame() {
-            if(attackBoostTicks>0) attackBoostTicks--; if(timeStopTicks>0) timeStopTicks--;
-            if(shakeAmount > 0) {
-                canvas.style.transform = `translate(${(Math.random()-0.5)*shakeAmount}px, ${(Math.random()-0.5)*shakeAmount}px)`;
-                shakeAmount *= 0.9;
-            } else { canvas.style.transform = `translate(0,0)`; }
-
-            if(flashAlpha > 0) flashAlpha -= 0.05;
-
-            let wasEnemyBefore = enemies.length > 0;
-
-            enemies = enemies.filter(e => {
-                if(e.marked>0) e.marked--; if(e.weakness>0) e.weakness--;
-                if(e.slowTimer>0) e.slowTimer--; if(e.freezeTimer>0) e.freezeTimer--;
-                let target = paths[e.pIdx][e.node + 1], dist = Math.hypot(target.x - e.x, target.y - e.y);
-                let moveSpeed = e.speed * ((timeStopTicks>0 || e.freezeTimer>0) ? 0 : (e.slowTimer>0 ? 0.48 : 1));
-                if(dist < Math.max(moveSpeed,0.01)) {
-                    if(++e.node >= paths[e.pIdx].length - 1) { lives--; updateStat(); return false; }
-                } else if(moveSpeed>0) { e.x += (target.x - e.x) / dist * moveSpeed; e.y += (target.y - e.y) / dist * moveSpeed; }
-                e.progress=e.node + (1-Math.min(dist,200)/200);
-                if(e.hp <= 0) { gold += e.bounty; totalKills++; if(e.type==='COVID-19') {bossesDefeated++;createToast(`👑 보스 처치! 보너스 +$${e.bounty}`);} checkAchievements(); updateStat(); return false; }
-                return true;
-            });
-
-            if(wasEnemyBefore && enemies.length === 0 && gameActive) { checkAchievements(); if(wave % 10 === 0) {
-                switchBGM(audioCtx.bgmBattle);
-            }}
-
-            summons = summons.filter(s => {
-                let targetNode = paths[s.pIdx][s.node - 1];
-                let dist = Math.hypot(targetNode.x - s.x, targetNode.y - s.y);
-                if (dist < s.speed) { s.node--; if (s.node <= 0) return false; }
-                else { s.x += (targetNode.x - s.x) / dist * s.speed; s.y += (targetNode.y - s.y) / dist * s.speed; }
-                let hitEnemy = enemies.find(e => Math.hypot(e.x - s.x, e.y - s.y) < 30);
-                if (hitEnemy) {
-                    hitEnemy.hp -= s.dmg;
-                    shakeAmount = 10;
-                    effects.push({ x: s.x, y: s.y, r: 10, maxR: 120, type: 'mega', alpha: 1 });
-                    playSound(audioCtx.megaShoot);
-                    return false;
-                }
-                return true;
-            });
-
-            placedTowers.forEach(t => {
-                // 지원 타워 패시브
-                if(t.id===10){
-                    t.healTimer=(t.healTimer||0)-1;
-                    if(t.healTimer<=0){ lives=Math.min(15,lives+(t.level>=3?2:1)); t.healTimer=240-(t.level*35); updateStat(); effects.push({x:t.x,y:t.y,r:8,maxR:45,type:'heal',alpha:1}); }
-                    return;
-                }
-                if(t.id===9 || t.id===14){
-                    // 공격 자체는 하지 않고 주변 버프만 제공
-                    t.cooldown=0; return;
-                }
-                if(t.isBank){
-                    // 집중실: 5초마다 레벨에 따라 자금 생산 (60fps 기준)
-                    t.bankTimer = (t.bankTimer ?? 300) - 1;
-                    if(t.bankTimer <= 0){
-                        const baseIncome = t.level===1 ? 150 : t.level===2 ? 300 : 500;
-                        const income = Math.floor(baseIncome*(t.bankIncomeBonus||1));
-                        gold += income; totalBankIncome += income; checkAchievements();
-                        t.bankTimer = 300;
-                        updateStat();
-                        effects.push({x:t.x,y:t.y,r:8,maxR:55,type:'heal',alpha:1});
-                        createToast(`💰 집중실 수익 +$${income}`);
-                    }
-                    return;
-                }
-                if(t.cooldown > 0) t.cooldown--;
-                else {
-                    if(t.id === 15) {
-                        const target=getTowerTarget(t);
-                        if(target){
-                            const pIdx=target.pIdx, lastNodeIdx=paths[pIdx].length-1;
-                            summons.push({ x:paths[pIdx][lastNodeIdx].x, y:paths[pIdx][lastNodeIdx].y, pIdx, node:lastNodeIdx, speed:5+(t.level*2), dmg:t.dmg*(t.level>=3?1.35:1), color:"#00ffff", targetEnemy:target });
-                            t.lastTarget={x:target.x,y:target.y};
-                            t.cooldown=t.fireRate*3; playSound(audioCtx.shoot);
-                        }
-                    } else {
-                        let target = getTowerTarget(t);
-                        if(target) {
-                            let currentDmg = t.dmg * (attackBoostTicks>0?1.5:1);
-                            const level=t.level;
-                            // 주변 버프 타워의 실시간 강화
-                            const nearbyBuff=placedTowers.filter(o=>o!==t && (o.id===9||o.id===14) && Math.hypot(o.x-t.x,o.y-t.y)<(o.id===14&&o.level>=2?300:180)).reduce((v,o)=>v*(1+(o.id===9?(0.12+0.06*o.level):(0.08*o.level))),1);
-                            currentDmg*=nearbyBuff;
-                            if(target.marked>0) currentDmg*=1.15+(level>=3?0.10:0);
-                            if(target.weakness>0) currentDmg*=1.20+(level>=3?0.15:0);
-                            if(t.id===4 && target.stealth) currentDmg*=1.8+(level>=3?.7:0);
-                            if(t.id===6 && target.hp/target.maxHp<0.45) currentDmg*=1.45+(level>=3?.25:0);
-                            if(t.id===12 && (target.type==='에볼라'||target.type==='COVID-19')) currentDmg*=1.7+(level>=3?.4:0);
-                            if(t.id===13){ t.comboTarget=t.comboTarget===target?target:null; t.combo=t.comboTarget?Math.min((t.combo||0)+1,level>=3?8:5):0; currentDmg*=1+(t.combo||0)*0.08; t.comboTarget=target; }
-                            if(t.id===15 && target.type==='COVID-19') currentDmg*=1.5+(level>=3?.5:0);
-                            if(t.isMega && Math.random() < 0.2) { currentDmg *= 15; flashAlpha = 0.4; shakeAmount = 20; playSound(audioCtx.megaShoot); } else playSound(t.isMega ? audioCtx.megaShoot : audioCtx.shoot);
-                            target.hp -= currentDmg;
-                            if(t.id===1){ target.slowTimer=40+level*25; if(level>=3) enemies.forEach(e=>{if(e!==target&&Math.hypot(e.x-target.x,e.y-target.y)<85)e.slowTimer=25;}); }
-                            if(t.id===2){ const r=level>=3?125:80; enemies.forEach(e=>{if(e!==target&&Math.hypot(e.x-target.x,e.y-target.y)<r)e.hp-=currentDmg*(level>=3?.42:.25);}); }
-                            if(t.id===3){ target.marked=level>=3?180:110; }
-                            if(t.id===5){ const r=level>=3?145:105; enemies.forEach(e=>{if(e!==target&&Math.hypot(e.x-target.x,e.y-target.y)<r)e.hp-=currentDmg*(level>=3?.55:.35);}); }
-                            if(t.id===7){ target.weakness=level>=3?180:100; }
-                            if(t.id===8 && level>=3 && Math.random()<.28){ target.hp-=currentDmg*.7; }
-                            if(t.id===11){ target.slowTimer=70+level*30; if(level>=3 && (target.type==='에볼라'||target.type==='COVID-19')) target.freezeTimer=18; }
-                            t.lastTarget = {x: target.x, y: target.y}; spawnShootProjectile(t.x,t.y,target.x,target.y,t.isMega);
-                            t.cooldown = Math.max(3, t.fireRate * (t.id===8 ? (level>=3?.45:.65) : 1)); t.effectTimer = 6;
-                            if(t.isMega) { enemies.forEach(nearE => { if(nearE!==target&&Math.hypot(nearE.x-target.x,nearE.y-target.y)<(level>=3?155:120)) nearE.hp-=currentDmg*.6; }); effects.push({x:target.x,y:target.y,r:10,maxR:130,type:'mega',alpha:1}); }
-                            else { effects.push({x:target.x,y:target.y,r:2,maxR:25,type:'hit',alpha:1}); for(let i=0;i<3;i++) effects.push({x:target.x,y:target.y,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,r:3,type:'particle',alpha:1,color:t.id<=5?'#2ecc71':'#f1c40f'}); }
-                        }
-                    }
-                }
-            });
-
-            effects = effects.filter(fx => {
-                if(fx.type === 'particle' || fx.type === 'installParticle') { fx.x += fx.vx; fx.y += fx.vy; fx.vx*=.98; fx.vy*=.98; fx.alpha -= fx.type==='particle'?.05:.045; fx.r*=.985; }
-                else { const step=fx.type==='hit'?3:fx.type==='mega'?15:fx.type==='install'?5:fx.type==='install2'?7:3; fx.r += step; fx.alpha -= fx.type==='install2'?.055:.04; }
-                return fx.alpha > 0 && (!fx.maxR || fx.r < fx.maxR+20);
-            });
-        }
-
-        function render() {
-            ctx.fillStyle = "#050505"; ctx.fillRect(0,0,800,450);
-            paths.forEach(p => {
-                ctx.shadowBlur = 15; ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.2)"; ctx.lineWidth = 40; ctx.lineJoin = "round"; ctx.lineCap = "round";
-                ctx.beginPath(); ctx.moveTo(p[0].x, p[0].y); p.forEach(pt => ctx.lineTo(pt.x, pt.y)); ctx.stroke();
-                ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255, 255, 255, 0.08)"; ctx.lineWidth = 45; ctx.stroke();
-            });
-
-            if(flashAlpha > 0) { ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`; ctx.fillRect(0,0,800,450); }
-
-
-            // Ambient battlefield particles
-            ambientParticles.forEach(p=>{ctx.globalAlpha=p.a;ctx.fillStyle='#5df7ff';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
-
-            // Animated energy paths
-            paths.forEach((p,pi)=>{ctx.save();ctx.setLineDash([18,18]);ctx.lineDashOffset=-(Date.now()/45);ctx.strokeStyle=pi===0?'rgba(93,247,255,.24)':'rgba(85,255,154,.18)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);p.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();ctx.restore();});
-
-            // Projectile trails
-            projectiles.forEach(p=>{ctx.save();ctx.lineCap='round';for(let i=1;i<p.trail.length;i++){const q=p.trail[i],prev=p.trail[i-1];ctx.globalAlpha=i/p.trail.length*.7;ctx.strokeStyle=p.isMega?'#5df7ff':'#ffd45a';ctx.lineWidth=p.isMega?5:3;ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(q.x,q.y);ctx.stroke();}ctx.globalAlpha=1;ctx.shadowBlur=p.isMega?22:10;ctx.shadowColor=p.isMega?'#5df7ff':'#ffd45a';ctx.fillStyle=p.isMega?'#fff':'#ffd45a';ctx.beginPath();ctx.arc(p.x,p.y,p.isMega?6:4,0,Math.PI*2);ctx.fill();ctx.restore();});
-
-            summons.forEach(s => {
-                ctx.fillStyle = s.color; ctx.shadowBlur = 15; ctx.shadowColor = s.color;
-                ctx.beginPath(); ctx.arc(s.x, s.y, 10, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-            });
-
-            effects.forEach(fx => {
-                ctx.beginPath();
-                if(fx.type === 'particle' || fx.type === 'installParticle') {
-                    ctx.arc(fx.x, fx.y, fx.r, 0, Math.PI*2);
-                    ctx.fillStyle = fx.color || '#fff'; ctx.globalAlpha = fx.alpha; ctx.fill(); ctx.globalAlpha = 1.0;
-                } else {
-                    ctx.arc(fx.x, fx.y, Math.abs(fx.r), 0, Math.PI*2);
-                    ctx.strokeStyle = fx.type === 'upgrade' ? `rgba(241,196,15,${fx.alpha})` : fx.type === 'mega' ? `rgba(0,255,255,${fx.alpha})` : fx.type === 'install' ? `rgba(85,255,154,${fx.alpha})` : fx.type === 'install2' ? `rgba(93,247,255,${fx.alpha})` : `rgba(255,255,255,${fx.alpha})`;
-                    ctx.lineWidth = fx.type === 'mega' ? 8 : fx.type.startsWith('install') ? 3 : 2; ctx.stroke();
-                }
-            });
-
-            placedTowers.forEach(t => {
-                const size = t.isMega ? 90 : 50;
-                if(Math.hypot(t.x - mousePos.x, t.y - mousePos.y) < size/2) {
-                    ctx.beginPath(); ctx.arc(t.x, t.y, t.range, 0, Math.PI*2);
-                    ctx.fillStyle = t.isMega ? "rgba(0, 255, 255, 0.1)" : "rgba(46, 204, 113, 0.1)"; ctx.fill();
-                    ctx.strokeStyle = t.isMega ? "rgba(0, 255, 255, 0.4)" : "rgba(46, 204, 113, 0.4)"; ctx.stroke();
-                }
-                if(t.isMega) {
-                    ctx.shadowBlur = 25; ctx.shadowColor = "#00ffff";
-                    ctx.beginPath(); ctx.arc(t.x, t.y, 55, 0, Math.PI*2);
-                    ctx.strokeStyle = `rgba(0, 255, 255, ${0.4 + Math.sin(Date.now()/100)*0.3})`; ctx.lineWidth = 4; ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
-                const img = towerImages[t.id];
-                if(img.complete && img.naturalWidth !== 0) ctx.drawImage(img, t.x - size/2, t.y - size/2, size, size);
-                else { ctx.fillStyle = t.isMega ? "#00ffff" : "#2ecc71"; ctx.fillRect(t.x - size/2, t.y - size/2, size, size); }
-                ctx.fillStyle = "#f1c40f"; ctx.font = "bold 16px Arial"; ctx.textAlign="center"; ctx.fillText("★".repeat(t.level), t.x, t.y - size/2 - 10);
-                if(t.effectTimer > 0) {
-                    ctx.beginPath(); ctx.strokeStyle = t.isMega ? "#00ffff" : "#2ecc71"; ctx.lineWidth = t.isMega ? 8 : 2;
-                    ctx.moveTo(t.x, t.y); ctx.lineTo(t.lastTarget.x, t.lastTarget.y); ctx.stroke();
-                    t.effectTimer--;
-                }
-            });
-
-            if(selectedTowerId) {
-                const spec = towerSpecs[selectedTowerId];
-                const size = spec.isMega ? 90 : 50;
-                ctx.beginPath(); ctx.arc(mousePos.x, mousePos.y, spec.range, 0, Math.PI*2);
-                const canPlace = gold >= spec.cost;
-                ctx.strokeStyle = canPlace ? "rgba(85,255,154,.65)" : "rgba(255,84,112,.7)"; ctx.setLineDash([7,7]); ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
-                ctx.beginPath();ctx.arc(mousePos.x,mousePos.y,Math.max(18,spec.range*.16)+Math.sin(Date.now()/140)*4,0,Math.PI*2);ctx.strokeStyle=canPlace?(spec.isMega?'rgba(93,247,255,.5)':'rgba(85,255,154,.4)'):'rgba(255,84,112,.5)';ctx.stroke();
-                ctx.globalAlpha = 0.5;
-                const img = towerImages[selectedTowerId];
-                if(img.complete && img.naturalWidth !== 0) ctx.drawImage(img, mousePos.x-size/2, mousePos.y-size/2, size, size);
-                else { ctx.fillStyle = "#fff"; ctx.fillRect(mousePos.x-size/2, mousePos.y-size/2, size, size); }
-                ctx.globalAlpha = 1.0;
-            }
-
-            enemies.forEach(e => {
-                ctx.save();
-                ctx.globalAlpha=e.stealth && !placedTowers.some(t=>t.id===4&&Math.hypot(t.x-e.x,t.y-e.y)<t.range) ? .25 : 1;
-                ctx.fillStyle = e.color; ctx.beginPath(); ctx.arc(e.x, e.y, e.size/2, 0, Math.PI*2); ctx.fill();
-                if(e.marked>0){ctx.strokeStyle='#5df7ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.size/2+5,0,Math.PI*2);ctx.stroke();}
-                if(e.weakness>0){ctx.strokeStyle='#ffd45a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.size/2+9,0,Math.PI*2);ctx.stroke();}
-                ctx.restore();
-                const barW = e.type === "COVID-19" ? 70 : 30;
-                ctx.fillStyle = "#333"; ctx.fillRect(e.x - barW/2, e.y - e.size/2 - 12, barW, 7);
-                ctx.fillStyle = e.type === "COVID-19" ? "#ff00ff" : "#0f0";
-                ctx.fillRect(e.x - barW/2, e.y - e.size/2 - 12, barW * (e.hp/e.maxHp), 7);
-            });
-
-            if(adminShowRanges){
-                ctx.save();placedTowers.forEach(t=>{ctx.beginPath();ctx.arc(t.x,t.y,t.range,0,Math.PI*2);ctx.strokeStyle='rgba(93,247,255,.8)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.stroke();});ctx.restore();
-            }
-            if(adminShowEnemyInfo){
-                ctx.save();ctx.font='10px monospace';ctx.textAlign='center';enemies.forEach(e=>{ctx.fillStyle='#fff';ctx.strokeStyle='#081018';ctx.lineWidth=3;const label=`${e.type} HP:${Math.ceil(e.hp)}/${Math.ceil(e.maxHp)} SPD:${e.speed}`;ctx.strokeText(label,e.x,e.y-e.size/2-19);ctx.fillText(label,e.x,e.y-e.size/2-19);});ctx.restore();
-            }
-            if(lives <= 0) endGame("방역 실패: 변이 바이러스가 확산되었습니다.", false);
-            if(wave >= maxWaves && enemies.length === 0 && gameActive) endGame("방역 대성공: 인류를 구했습니다!", true);
-        }
-
-        canvas.addEventListener('pointerdown', (e) => {
-            if(e.pointerType === 'touch') e.preventDefault();
-            const rect = canvas.getBoundingClientRect(), x = (e.clientX - rect.left) * (800 / rect.width), y = (e.clientY - rect.top) * (450 / rect.height);
-            let tIdx = placedTowers.findIndex(t => Math.hypot(t.x - x, t.y - y) < (t.isMega?55:25));
-            if(tIdx !== -1) {
-                const t = placedTowers[tIdx];
-                isPaused = true; document.getElementById('pause-screen').style.display = 'flex';
-                if (!isMuted && currentBgm) currentBgm.pause();
-                updateTowerPanel(tIdx);
-                return;
-            }
-            if(selectedTowerId) {
-                const spec = towerSpecs[selectedTowerId];
-                const invalid=isInvalidTowerSpot(x,y,spec.isMega?55:25);if(invalid){showAlert(invalid==='경로'?'경로 위에는 설치할 수 없습니다.':'타워가 겹치지 않게 설치하세요.');return;}
-                if(gold >= spec.cost) {
-                    gold -= spec.cost;
-                    if(spec.isMega) {
-                        shakeAmount = 50; flashAlpha = 0.5; createToast("☢️ MEGA UNIT DEPLOYED");
-                        playSound(audioCtx.megaBuild);
-                    }
-                    placedTowers.push({ ...spec, x, y, level: 1, priority: 'first', cooldown: 0, effectTimer: 0, totalSpent: spec.cost, combo:0, comboTarget:null, bankTimer:300 });
-                    totalTowersPlaced++; checkAchievements(); spawnInstallEffect(x,y,spec.isMega);
-                    selectedTowerId = null; updateStat(); updateShopUI();
-                } else { showAlert("예산이 부족합니다!"); }
-            }
-        });
-
-        function updateShopUI() {
-            const shopUI = document.getElementById('shop'); shopUI.innerHTML = "";
-            for(let i=1; i<=15; i++) {
-                const count = placedTowers.filter(t => t.id === i).length, spec = towerSpecs[i], card = document.createElement('div');
-                card.className = `tower-card ${selectedTowerId === i ? 'selected' : ''}`;
-                if(spec.isMega) card.style.borderColor = "#00ffff";
-                card.innerHTML = `<img src="${towerImages[i].src}" onerror="this.src='static/images/tower_01.png'"><b>${spec.name}</b><br>$${spec.cost}`;
-                card.onclick = (e) => {
-                    if(count < spec.limit) { selectedTowerId = (selectedTowerId === i ? null : i); updateShopUI(); mobileDeployHint(); }
-                    else { showAlert("건설 제한 초과!"); }
-                    e.stopPropagation();
-                };
-                shopUI.appendChild(card);
-            }
-        }
-
-
-        // Mobile-friendly feedback: prevent the page from stealing gestures while deploying.
-        let mobileHintTimer = null;
-        function mobileDeployHint(){
-            if(!selectedTowerId || window.innerWidth > 700) return;
-            const spec=towerSpecs[selectedTowerId];
-            showAlert(`👆 ${spec.name} 선택됨 — 맵을 탭해서 설치`);
-        }
-        window.addEventListener('resize',()=>{
-            // Keep the canvas crisp after rotation without changing the game's logical 800x450 coordinate system.
-            if(window.innerWidth<=700){ document.body.classList.add('mobile-mode'); }
-            else { document.body.classList.remove('mobile-mode'); }
-        });
-
-        function showAlert(m) { const b = document.getElementById('alert-banner'); b.innerText = m; b.style.display='block'; setTimeout(()=>b.style.display='none', 2500); }
-        function updateStat() { const buffs=(attackBoostTicks>0?' ⚡공격강화':'')+(timeStopTicks>0?' ⏸시간정지':''); document.getElementById('stat-text').innerText = `자금: $${gold.toLocaleString()} | 생명: ${lives} | 웨이브: ${wave} / ${maxWaves}${buffs}`; }
-
-        function endGame(text, isVictory) {
-            gameActive = false;
-            document.getElementById('result-screen').style.display = 'flex';
-            document.getElementById('result-title').innerText = text;
-
-            if(currentBgm) currentBgm.pause();
-            if(isVictory) playSound(audioCtx.victory);
-            else playSound(audioCtx.defeat);
-        }
-
-
-        // Responsive viewport helper for iPhone/iPad Safari and rotation.
-        (function(){
-            const setVH = () => {
-                const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                document.documentElement.style.setProperty('--app-vh', h + 'px');
-                fitMobileMap();
-            };
-            function fitMobileMap(){
-                const canvas = document.getElementById('gameCanvas');
-                const container = document.getElementById('game-container');
-                const status = document.querySelector('.status-bar');
-                const shop = document.getElementById('shop');
-                const touchDevice = window.matchMedia && window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-                if(!canvas || !container || (!touchDevice && window.innerWidth > 1100)) return;
-                const vvH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-                const vvW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-                const statusH = status ? status.getBoundingClientRect().height : 0;
-                const shopH = shop ? Math.min(shop.getBoundingClientRect().height || 0, 150) : 0;
-                const safe = 10;
-                const availableH = Math.max(220, vvH - statusH - shopH - safe);
-                const availableW = Math.max(280, Math.min(vvW - 12, container.clientWidth || vvW - 12));
-                const mapW = Math.min(800, availableW, availableH * (800/450));
-                const mapH = mapW * (450/800);
-                document.documentElement.style.setProperty('--map-h', mapH + 'px');
-                canvas.style.width = mapW + 'px';
-                canvas.style.height = mapH + 'px';
-            }
-            setVH();
-            window.addEventListener('resize', setVH, {passive:true});
-            window.addEventListener('orientationchange', () => setTimeout(setVH, 180), {passive:true});
-            window.addEventListener('resize', () => setTimeout(fitMobileMap, 60), {passive:true});
-            if(window.visualViewport) window.visualViewport.addEventListener('resize', setVH, {passive:true});
-        })();
-    </script>
-</body>
-</html>
+:root{--c:#5df7ff;--g:#55ff9a;--y:#ffd45a}*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:radial-gradient(circle at 50% 0,#12223b,#05070c 50%,#020308);color:#eafaff;font-family:Inter,system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#app{max-width:1100px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;position:relative}
+#hud{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;padding:7px 10px;background:#070c16e6;border-bottom:1px solid #5df7ff40;font-weight:800;font-size:14px}
+#hud span{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+#prev{font-size:12px;color:#aac4d3;padding:4px 10px;min-height:24px}
+#stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center}
+canvas{border:1px solid #5df7ffb3;border-radius:14px;background:#03070d;box-shadow:0 0 35px #00dcff2e;touch-action:none;cursor:crosshair}
+button{cursor:pointer;border:1px solid #ffffff26;border-radius:10px;padding:8px 12px;min-height:36px;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,#25d99a,#0ea77a)}
+button.alt{background:#132638;border-color:var(--c)}button:disabled{opacity:.4;cursor:not-allowed}
+#shop{display:flex;gap:7px;padding:7px 8px max(7px,env(safe-area-inset-bottom));overflow-x:auto;background:#02050af2;border-top:1px solid #5df7ff40}
+.card{flex:0 0 auto;width:76px;padding:6px 4px;border:1px solid #ffffff1a;border-radius:11px;background:#0e1623;font-size:10px;text-align:center;cursor:pointer;transition:.15s}
+.card img{width:38px;height:38px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 3px;pointer-events:none}
+.card.mg{border-color:var(--c)}.card.mg img{border-radius:0;object-fit:contain}
+.card.on{border-color:var(--y);background:#3a3210;transform:translateY(-4px)}.card.no{opacity:.4}
+#tp{display:none;position:absolute;right:6px;top:6px;width:210px;padding:10px;background:#0a121ef2;border:1px solid var(--y);border-radius:14px;z-index:20;font-size:13px;text-align:left}
+#tp button{display:block;width:100%;margin-top:6px}.d{color:#cfe;margin:6px 0;font-size:12px}
+#tst{display:none;position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#0a1a28f2;border:1px solid var(--c);border-radius:99px;padding:8px 20px;font-weight:800;font-size:13px;z-index:30;white-space:nowrap;pointer-events:none}
+.ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 35%,#0f425580,#020409f2 60%);z-index:50;text-align:center;padding:14px;overflow:auto}
+.ov h1{font-size:clamp(30px,8vw,70px);color:var(--y);letter-spacing:4px;margin:0;text-shadow:0 0 14px var(--y),0 0 45px #ffd45a55;cursor:pointer}
+.ov .sub{color:var(--c);font-weight:800;letter-spacing:4px;font-size:12px}.ov p{margin:0;color:#aaa}
+.ov div button{margin:4px;min-width:130px;padding:12px 18px}
+#ach,#lab{display:none;font-size:13px;line-height:1.7;color:#cfe}
+#intro{background:radial-gradient(circle at 50% 40%,#0c2a3c,#010208 70%);z-index:90;overflow:hidden}
+#intro img{position:absolute;width:90px;opacity:.5;filter:drop-shadow(0 0 14px #55ff9a);animation:fl 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes fl{to{transform:translate(40px,-60px) rotate(25deg)}}
+#il{font-size:clamp(18px,3.4vw,30px);font-weight:800;line-height:1.6;max-width:720px;min-height:100px;color:#eafaff;text-shadow:0 0 18px #5df7ff;animation:fi 1.1s both;z-index:2}
+@keyframes fi{from{opacity:0;transform:translateY(14px) scale(.97)}}
+#pkb{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}#pkb button{width:190px;min-height:110px;font-size:14px;line-height:1.5}
+#dev{display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#101a27;border:2px solid var(--y);border-radius:12px;padding:14px;z-index:99}#dev button{display:block;width:100%;margin:5px 0}
+</style></head><body><div id="app">
+<div id="hud"><span id="st"></span>
+<span><button class="alt" id="s0" onclick="skill(0)"></button><button class="alt" id="s1" onclick="skill(1)"></button><button class="alt" id="s2" onclick="skill(2)"></button></span>
+<span><button id="bw" onclick="startWave()">▶ 웨이브</button><button class="alt" id="bs" onclick="spd()">⏩ 1x</button><button class="alt" id="ba" onclick="auto()">🔁 수동</button><button class="alt" onclick="pause()">⏸</button><button class="alt" id="bm" onclick="mute()">🔊</button></span></div>
+<div id="prev"></div>
+<div id="stage"><canvas id="c" width="800" height="450"></canvas><div id="tp"></div><div id="tst"></div></div>
+<div id="shop"></div>
+<div id="intro" class="ov" style="display:flex"><img src="static/images/enemy_normal.png" style="left:8%;top:12%"><img src="static/images/enemy_fast.png" style="right:10%;top:20%;animation-delay:-3s"><img src="static/images/enemy_splitter.png" style="left:14%;bottom:12%;animation-delay:-5s"><img src="static/images/enemy_stealth.png" style="right:16%;bottom:16%;animation-delay:-2s"><img src="static/images/enemy_boss.png" style="left:42%;top:4%;width:150px;opacity:.3;animation-delay:-6s"><div id="il"><h1 style="cursor:default">PHD: DEFENSE</h1><div class="sub">V6 REMAKE</div></div><button id="ib" onclick="runIntro()" style="font-size:16px;padding:14px 30px">▶ TOUCH TO START</button><button class="alt" id="isk" onclick="endIntro()" style="display:none;position:absolute;right:14px;bottom:14px;min-width:0">SKIP ▶</button></div>
+<div id="pk" class="ov" style="z-index:80"><h1 style="cursor:default;font-size:30px">🎁 보급품 선택</h1><p>하나를 골라 방역 체계를 강화하세요.</p><div id="pkb"></div></div>
+<div id="title" class="ov"><h1 onclick="dv()">PHD: DEFENSE</h1><div class="sub">V6 REMAKE // BATTLE PROTOCOL</div><p>바이러스로부터 인류를 보호하세요.</p><div id="maps"></div><div id="diffs"></div><button class="alt" onclick="const a=$('ach');a.style.display=a.style.display=='block'?'none':'block'">🏆 업적</button><button class="alt" onclick="const a=$('lab');a.style.display=a.style.display=='block'?'none':'block'">📈 연구소</button><div id="ach"></div><div id="lab"></div><small style="color:#667">Space 웨이브 · Q/W/E 스킬 · F 배속 · U 진화 · S 철거 · P 정지 · Shift+클릭 연속 설치</small></div>
+<div id="pz" class="ov"><h1>[ 일시정지 ]</h1><div><button onclick="pause()">재개</button><button class="alt" onclick="location.reload()">메인으로</button></div></div>
+<div id="rs" class="ov"><h1 id="rt" style="cursor:default"></h1><div id="rb" style="font-size:16px;line-height:1.8"></div><div><button onclick="start(G.mi,G.di)">다시 도전</button><button class="alt" onclick="location.reload()">메인으로</button></div></div>
+</div>
+<div id="dev"><b>🛠 DEV</b><button onclick="dc('g')">💰 +$50,000</button><button onclick="dc('l')">❤ +30</button><button onclick="dc('k')">☠ 적 전체 제거</button><button class="alt" onclick="$('dev').style.display='none'">닫기</button></div>
+<script>
+const $=id=>document.getElementById(id),cv=$('c'),x=cv.getContext('2d'),W=800,H=450,dpr=Math.min(2,window.devicePixelRatio||1);
+cv.width=W*dpr;cv.height=H*dpr;
+const R=(a,b)=>a+Math.random()*(b-a);
+// ---------- 에셋 ----------
+const pad=i=>String(i).padStart(2,'0'),IM=n=>{const i=new Image();i.src='static/images/'+n+'.png';return i};
+const tI=[0,...Array.from({length:15},(_,i)=>IM('tower_'+pad(i+1)))],eI={};
+['normal','fast','mini','splitter','stealth','boss'].forEach(k=>eI[k]=IM('enemy_'+k));
+const AU=n=>new Audio('static/sounds/'+n+'.mp3'),S={main:AU('bgm_main'),battle:AU('bgm_battle'),boss:AU('bgm_boss'),shoot:AU('shoot'),mega:AU('mega_shoot'),up:AU('upgrade'),build:AU('mega_build'),win:AU('victory'),lose:AU('defeat')};
+[S.main,S.battle,S.boss].forEach(a=>a.loop=true);S.main.volume=S.battle.volume=.15;S.boss.volume=.2;S.shoot.volume=.2;S.mega.volume=.45;S.up.volume=.6;S.build.volume=.7;S.win.volume=S.lose.volume=.6;
+let muted=false,bgm=null,lastSfx=0;
+function sfx(a,thr){if(muted)return;const n=performance.now();if(thr){if(n-lastSfx<thr)return;lastSfx=n}const c=a.cloneNode();c.volume=a.volume;c.play().catch(()=>{})}
+function music(a){if(bgm===a)return;if(bgm)bgm.pause();bgm=a;if(!muted&&a){a.currentTime=0;a.play().catch(()=>{})}}
+addEventListener('pointerdown',()=>{if(!bgm)music(S.main)});
+// ---------- 데이터 ----------
+const T=[null,
+['KF94',200,30,110,30,12,'기본 방어선 · 명중한 적을 느리게 만듭니다.'],
+['손소독',350,60,100,42,12,'명중 지점 주변 범위 피해 · 감속된 적 +30%'],
+['자가키트',300,30,120,36,12,'진단 표식: 받는 피해 +25% · 은신 감지 · 장갑 파괴'],
+['열화상',450,75,150,48,5,'은신 적 감지 · 은신 적에게 +80% 피해'],
+['소독차',650,110,105,54,5,'넓은 범위 폭발 · 감속된 적 +30%'],
+['선별소',750,110,125,40,5,'체력 45% 이하 +60% · 표식 대상 +30%'],
+['조사관',850,60,135,30,5,'약점 표식: 대상이 받는 피해 +20%'],
+['드라이브',1000,32,115,9,5,'초고속 연사 · 약점 표식 대상 +25%'],
+['본부',1300,0,120,0,5,'범위 내 타워 공격력 +15%/Lv'],
+['치료소',1400,0,0,0,3,'주기적으로 생명력 1 회복 (Lv↑ 빠르게)'],
+['격리동',1600,70,110,36,5,'강력 감속 · Lv3: 일반 적 일시 정지'],
+['구급단',2000,260,130,50,5,'분열체·보스에게 +80% 피해'],
+['집중실',500,0,0,0,2,'10초마다 자금 생산 (Lv↑ 증가)'],
+['국가 백신소',6000,0,230,0,1,'MEGA · 범위 내 타워 +25%/Lv · 주기적 백신 펄스(전체 피해)'],
+['스마트 앰뷸',8000,700,0,420,1,'MEGA · 가장 단단한 적에게 구급차 돌진']];
+const E={normal:{hp:1,sp:1.4,sz:34,b:12},fast:{hp:.55,sp:2.6,sz:30,b:10},mini:{hp:.3,sp:2,sz:22,b:5},splitter:{hp:1.6,sp:1.1,sz:42,b:25},stealth:{hp:1,sp:1.9,sz:32,b:20},boss:{hp:40,sp:.55,sz:78,b:600},armor:{hp:2.2,sp:1,sz:38,b:30,im:'normal'},healer:{hp:.8,sp:1.3,sz:30,b:35,im:'mini'}};
+const EM={normal:'🦠',fast:'💨',mini:'🔸',splitter:'🧬',stealth:'👻',boss:'👑',armor:'🛡',healer:'➕'},PN=['선두','후미','강적','약적','근접'];
+const MAPS=[{n:'감염 회랑',p:[[[0,80],[200,80],[200,180],[400,180],[400,80],[650,80],[650,225],[800,225]],[[0,370],[250,370],[250,270],[500,270],[500,370],[720,370],[720,225],[800,225]]]},
+{n:'뱀길 격리선',p:[[[0,60],[740,60],[740,150],[60,150],[60,240],[740,240],[740,330],[60,330],[60,400],[800,400]]]},
+{n:'교차 방역망',p:[[[0,225],[200,225],[200,90],[600,90],[600,225],[800,225]],[[0,225],[200,225],[200,360],[600,360],[600,225],[800,225]]]}];
+MAPS[0].z=[[300,115,48,'b'],[120,225,42,'b'],[580,300,40,'x']];MAPS[1].z=[[400,105,45,'b'],[400,285,45,'b'],[600,195,40,'x'],[200,195,40,'x']];MAPS[2].z=[[400,225,55,'b'],[100,120,40,'x'],[700,330,40,'x']];
+const DF=[{n:'초급',w:20,gold:1000,lives:20,hp:.85,c:'#27ae60'},{n:'중급',w:30,gold:800,lives:15,hp:1,c:'#f1c40f'},{n:'전문',w:40,gold:700,lives:10,hp:1.15,c:'#e74c3c'},{n:'무한',w:999,gold:800,lives:15,hp:1,c:'#9b59b6'}];
+const SK=['💉 응급','⚡ 과부하','⏸ 정지'],CD=[3600,2700,4500];
+const AD=[['first','첫 출동',()=>G.wave>=1,300],['w10','장기 방역',()=>G.wave>=10,1000],['bank','경제 기반',()=>G.bank>=5000,1000],['up10','기술 진보 (강화 10회)',()=>G.ups>=10,1000],['t10','방어망 구축 (타워 10개)',()=>G.placed>=10,800],['b3','보스 사냥꾼 (3마리)',()=>G.boss>=3,3000],['k300','박멸 작전 (300처치)',()=>G.kills>=300,1500],['mega','메가 유닛 배치',()=>G.tw.some(t=>t.id>=14),2000],['clear','방역 대성공',()=>G.win,0]];
+let AS={},BS={},MU={g:0,l:0,d:0},RP=0;try{AS=JSON.parse(localStorage.getItem('phd6a')||'{}');BS=JSON.parse(localStorage.getItem('phd6b')||'{}');MU=Object.assign(MU,JSON.parse(localStorage.getItem('phd6m')||'{}'));RP=+localStorage.getItem('phd6p')||0}catch(e){}
+function svM(){try{localStorage.setItem('phd6m',JSON.stringify(MU));localStorage.setItem('phd6p',RP)}catch(e){}}
+const MD=[['g','💰 비상 비축금','시작 자금 +$150/Lv'],['l','❤ 방역 장비','시작 생명력 +1/Lv'],['d','🔥 연구 성과','공격력 +4%/Lv']];
+function buyM(k){const c=40*(MU[k]+1);if(MU[k]>=8||RP<c)return;RP-=c;MU[k]++;svM();showTitle()}
+function chk(){for(const[a,n,f,r]of AD)if(!AS[a]&&f()){AS[a]=1;G.gold+=r;toast('🏆 '+n+(r?' +$'+r:''));try{localStorage.setItem('phd6a',JSON.stringify(AS))}catch(e){}}}
+// ---------- 경로 ----------
+function prep(m){return m.p.map(pts=>{let L=0;const s=pts.slice(1).map((b,i)=>{const a=pts[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]),o={a,b,l,s:L};L+=l;return o});return{pts,s,L}})}
+function at(P,d){const s=P.s;let i=0;while(i<s.length-1&&d>s[i].s+s[i].l)i++;const g=s[i],u=Math.min(1,Math.max(0,(d-g.s)/g.l));return[g.a[0]+(g.b[0]-g.a[0])*u,g.a[1]+(g.b[1]-g.a[1])*u]}
+function mkBg(P){const c=document.createElement('canvas');c.width=W*dpr;c.height=H*dpr;const b=c.getContext('2d');b.scale(dpr,dpr);
+const gr=b.createRadialGradient(400,60,0,400,225,520);gr.addColorStop(0,'#10213a');gr.addColorStop(1,'#03060c');b.fillStyle=gr;b.fillRect(0,0,W,H);
+b.strokeStyle='#5df7ff0d';b.lineWidth=1;for(let i=0;i<=W;i+=40){b.beginPath();b.moveTo(i,0);b.lineTo(i,H);b.stroke()}for(let i=0;i<=H;i+=40){b.beginPath();b.moveTo(0,i);b.lineTo(W,i);b.stroke()}
+b.lineJoin=b.lineCap='round';
+for(const[w,col,sb]of[[54,'#5df7ff2a',18],[46,'#0a1626',0],[40,'#0f2036',0]]){b.shadowBlur=sb;b.shadowColor='#5df7ff';b.strokeStyle=col;b.lineWidth=w;for(const p of P){b.beginPath();p.pts.forEach((q,j)=>j?b.lineTo(q[0],q[1]):b.moveTo(q[0],q[1]));b.stroke()}}
+b.shadowBlur=0;b.font='22px serif';b.textAlign='center';b.textBaseline='middle';for(const p of P){const a=p.pts[0],z=p.pts[p.pts.length-1];b.fillText('☣️',16,a[1]);b.fillText('🏥',784,z[1])}return c}
+// ---------- 웨이브 ----------
+function mkQ(w){const q=[],pool=['normal','normal','normal'];if(w>=2)pool.push('fast','fast');if(w>=3)pool.push('mini');if(w>=5)pool.push('splitter');if(w>=7)pool.push('stealth','stealth');if(w>=4)pool.push('armor');if(w>=8)pool.push('healer');
+if(w%10===0)q.push('boss');for(let i=0,n=7+Math.floor(w*1.5);i<n;i++)q.push(pool[Math.random()*pool.length|0]);for(let i=0;i<Math.floor(w/3);i++)q.push('mini');return q}
+function spawn(k,pi,d=0){const g=G,b=E[k],hp=55*Math.pow(1.12,g.wave)*(1+.04*g.wave)*b.hp*g.m.hp;const el=pi===undefined&&k!=='boss'&&g.wave>=5&&Math.random()<Math.min(.25,.04+g.wave*.006);pi=pi??(Math.random()*g.P.length|0);const q=at(g.P[pi],d);
+g.en.push({k,pi,d,hp:hp*(el?2.5:1),mh:hp*(el?2.5:1),el,sp:b.sp,sz:b.sz*(el?1.15:1),b:Math.round(b.b*(1+g.wave*.07))*(el?3:1),stealth:k==='stealth',slow:0,sf:1,fz:0,mark:0,weak:0,rev:0,ph:Math.random()*6,bt:0,x:q[0],y:q[1]})}
+function startWave(){const g=G;if(!g||!g.run||g.wv||g.over)return;g.wave++;g.q=g.next;g.next=g.wave<g.maxW?mkQ(g.wave+1):null;g.wv=1;g.sp=30;g.nx=0;const b=g.wave%10===0;music(b?S.boss:S.battle);if(b){toast('🚨 WARNING // BOSS WAVE '+g.wave);g.warn=150}chk()}
+// ---------- 전투 ----------
+const fmt=v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':''+Math.round(v);
+function ring(px,py,mr,c){if(G.fx.length<500)G.fx.push({k:'r',x:px,y:py,r:6,mr,a:1,c})}
+function burst(px,py,n,c){for(let i=0;i<n&&G.fx.length<500;i++)G.fx.push({k:'p',x:px,y:py,vx:R(-3,3),vy:R(-3,3),a:1,c,r:R(1.5,3.5)})}
+function ftx(t,s,c){if(G.tx.length<60)G.tx.push({x:t.x,y:t.y-30,t:s,a:1,c})}
+function hurt(e,v){if(e.dead)return;if(e.k==='armor'&&!(e.mark>0))v*=.6;if(e.mark>0)v*=1.25;if(e.weak>0)v*=1.2;e.hp-=v;if(G.tx.length<50&&Math.random()<.5)G.tx.push({x:e.x+R(-8,8),y:e.y-e.sz/2,t:fmt(v),a:1,c:v>e.mh*.2?'#ffd45a':'#fff'});if(e.hp<=0)die(e)}
+function die(e){if(e.dead)return;e.dead=true;const g=G;g.gold+=e.b;g.kills++;g.cb=g.t-g.lk<120?g.cb+1:1;g.lk=g.t;if(g.cb%10===0){const v=g.cb*3;g.gold+=v;ftx(e,'COMBO x'+g.cb+' +$'+v,'#ff7bff')}
+if(e.k==='boss'){g.boss++;g.shake=26;g.flash=.5;toast('👑 보스 처치! +$'+e.b);sfx(S.mega)}
+burst(e.x,e.y,e.k==='boss'?40:8,'#55ff9a');if(g.tx.length<60)g.tx.push({x:e.x,y:e.y-14,t:'+$'+e.b,a:1,c:'#ffd45a'});
+if(e.k==='splitter'){spawn('mini',e.pi,e.d);spawn('mini',e.pi,Math.max(0,e.d-18))}chk()}
+function slow(e,f,n){if(e.k==='boss')f=Math.max(f,.65);if(e.slow<=0||f<=e.sf)e.sf=f;e.slow=Math.max(e.slow,n)}
+function splash(e,r,v){ring(e.x,e.y,r,'#ffffff');for(const o of G.en)if(o!==e&&!o.dead&&Math.hypot(o.x-e.x,o.y-e.y)<r)hurt(o,v)}
+function buff(t){let b=1;for(const o of G.tw){if(o.id!==9&&o.id!==14)continue;if(Math.hypot(o.x-t.x,o.y-t.y)<o.range)b+=(o.id===9?.15:.25)*o.lv*(o.br===1?1.3:1)}for(const z of G.z)if(z[3]==='b'&&Math.hypot(t.x-z[0],t.y-z[1])<z[2])b+=.2;return b*G.dm*(G.ov>0?1.5:1)}
+function pick(t){const c=G.en.filter(e=>!e.dead&&(!e.stealth||e.rev>0)&&Math.hypot(e.x-t.x,e.y-t.y)<=t.range);if(!c.length)return null;
+const f=[e=>e.d,e=>-e.d,e=>e.hp,e=>-e.hp,e=>-Math.hypot(e.x-t.x,e.y-t.y)][t.pri];return c.reduce((a,b)=>f(b)>f(a)?b:a)}
+function fire(t,e){const lv=t.lv,id=t.id;let d=t.dmg*buff(t);
+if(id===4&&e.stealth)d*=1.8;if((id===2||id===5)&&e.slow>0)d*=1.3;if(id===6&&e.mark>0)d*=1.3;if(id===8&&e.weak>0)d*=1.25;if(id===6&&e.hp/e.mh<.45)d*=1.6;if(id===12&&(e.k==='boss'||e.k==='splitter'))d*=1.8;
+hurt(e,d);
+if(id===1)slow(e,.6,50+lv*20);else if(id===2)splash(e,70+lv*12,d*.4);else if(id===3)e.mark=120+lv*40;else if(id===5)splash(e,95+lv*15,d*.6);else if(id===7)e.weak=120+lv*40;
+else if(id===11){slow(e,.3,80+lv*30);if(lv>=3&&e.k!=='boss'&&Math.random()<.2)e.fz=40}
+if(G.pr.length<80)G.pr.push({px:t.x,py:t.y,x:t.x,y:t.y,tx:e.x,ty:e.y,l:0,c:'hsl('+id*24+',90%,65%)'});sfx(S.shoot,70)}
+function pulse(t){const g=G;ring(t.x,t.y,520,'#5df7ff');g.shake=14;g.flash=.25;sfx(S.mega);for(const e of g.en)hurt(e,e.mh*(e.k==='boss'?.03:.08)*t.lv)}
+function strike(t,e){const g=G,s=g.P[e.pi].pts[0];g.fx.push({k:'b',x:s[0],y:s[1],tx:e.x,ty:e.y,a:1,w:7,c:'#5df7ff'});ring(e.x,e.y,90,'#5df7ff');g.shake=12;sfx(S.mega);hurt(e,t.dmg+e.mh*(e.k==='boss'?.06+.02*t.lv:.25+.08*t.lv))}
+function tick(){const g=G;g.t++;g.cd=g.cd.map(v=>Math.max(0,v-1));if(g.ov>0)g.ov--;if(g.frz>0)g.frz--;if(g.flash>0)g.flash-=.02;if(g.warn>0)g.warn--;
+if(g.nx>0&&--g.nx===0)startWave();
+if(g.q.length&&--g.sp<=0){spawn(g.q.shift());g.sp=(Math.max(12,36-g.wave)+R(0,8))|0}
+for(const e of g.en){if(e.dead)continue;
+if(e.slow>0)e.slow--;if(e.fz>0)e.fz--;if(e.mark>0)e.mark--;if(e.weak>0)e.weak--;if(e.rev>0)e.rev--;
+if(e.k==='healer'&&g.t%30===0)for(const o of g.en)if(!o.dead&&o!==e&&o.hp<o.mh&&Math.hypot(o.x-e.x,o.y-e.y)<75)o.hp=Math.min(o.mh,o.hp+o.mh*.04);
+if(e.k==='boss'&&++e.bt%200===0){spawn('mini',e.pi,Math.max(0,e.d-25));spawn('mini',e.pi,Math.max(0,e.d-45))}
+const P=g.P[e.pi];e.d+=e.sp*(g.frz>0||e.fz>0?0:e.slow>0?e.sf:1);
+if(e.d>=P.L){e.dead=true;g.lives-=e.k==='boss'?5:1;g.shake=10;g.flash=.25;continue}
+const q=at(P,e.d);e.x=q[0];e.y=q[1]}
+for(const t of g.tw){const id=t.id;
+if(id===9||id===14){if(id===14&&++t.tk>=Math.max(420,1000-200*t.lv)){t.tk=0;pulse(t)}continue}
+if(id===10){if(++t.tk>=(1500-300*t.lv)*(t.br?.75:1)){t.tk=0;if(g.lives<g.m.lives){g.lives++;ring(t.x,t.y,60,'#55ff9a');ftx(t,'+1 ❤','#ff7b9c')}}continue}
+if(id===13){if(++t.tk>=600){t.tk=0;const v=Math.round([0,100,220,400][t.lv]*g.im*(t.br?1.4:1));g.gold+=v;g.bank+=v;ring(t.x,t.y,50,'#ffd45a');ftx(t,'+$'+v,'#ffd45a');chk()}continue}
+if(t.an>0)t.an--;
+if(id===15){if(++t.tk>=t.rate){const e=g.en.filter(o=>!o.dead&&(!o.stealth||o.rev>0)).sort((a,b)=>b.hp-a.hp)[0];if(e){t.tk=0;strike(t,e)}}continue}
+if(id===3||id===4)for(const e of g.en)if(e.stealth&&!e.dead&&Math.hypot(e.x-t.x,e.y-t.y)<t.range)e.rev=8;
+if(t.cd>0){t.cd--;continue}
+const e=pick(t);if(e){fire(t,e);t.cd=t.rate*g.sr;t.an=6}}
+g.en=g.en.filter(e=>!e.dead);
+g.pr=g.pr.filter(p=>{p.px=p.x;p.py=p.y;p.x+=(p.tx-p.x)*.5;p.y+=(p.ty-p.y)*.5;return++p.l<6});
+g.fx=g.fx.filter(f=>{if(f.k==='p'){f.x+=f.vx;f.y+=f.vy;f.vx*=.96;f.vy*=.96;f.a-=.04}else if(f.k==='r'){f.r+=(f.mr-f.r)*.18+1;f.a-=.045}else f.a-=.14;return f.a>0});
+g.tx=g.tx.filter(t=>{t.y-=.5;t.a-=.018;return t.a>0});
+if(g.lives<=0){g.lives=0;end(false);return}
+if(g.wv&&!g.q.length&&!g.en.length){g.wv=0;if(g.wave>=g.maxW){end(true);return}const bn=Math.round((100+g.wave*25)*g.im);g.gold+=bn;toast('✅ 웨이브 '+g.wave+' 방어 성공 +$'+bn);music(S.battle);chk();if(g.wave%5===0)showPerks();if(g.auto)g.nx=150}}
+// ---------- 설치/강화 ----------
+function bad(px,py,r){if(px<r||px>W-r||py<r||py>H-r)return'맵 밖';
+for(const P of G.P)for(const g of P.s){const dx=g.b[0]-g.a[0],dy=g.b[1]-g.a[1],u=Math.max(0,Math.min(1,((px-g.a[0])*dx+(py-g.a[1])*dy)/(dx*dx+dy*dy)));if(Math.hypot(px-g.a[0]-u*dx,py-g.a[1]-u*dy)<r*.6+30)return'경로 위'}
+for(const z of G.z)if(z[3]==='x'&&Math.hypot(px-z[0],py-z[1])<z[2]+r*.5)return'오염 구역';for(const t of G.tw)if(Math.hypot(t.x-px,t.y-py)<(r+(t.id>=14?45:25))*.85)return'다른 타워';return''}
+const mkT=(id,px,py)=>({id,x:px,y:py,lv:1,dmg:T[id][2],range:T[id][3],rate:T[id][4],cd:0,tk:0,pri:0,spent:T[id][1],an:0});
+const uc=t=>Math.round(T[t.id][1]*(t.lv+1)*G.cm);
+function up(){const g=G,t=g.st;if(!t||t.lv>=3)return;const c=uc(t);if(g.gold<c){toast('자금 부족! ($'+c+')');return}
+g.gold-=c;t.spent+=c;t.lv++;g.ups++;t.dmg*=1.9;t.rate*=t.id===15?.8:.85;t.range*=1.07;ring(t.x,t.y,110,'#ffd45a');burst(t.x,t.y,14,'#ffd45a');sfx(S.up);chk();tpn()}
+function sell(){const g=G,t=g.st;if(!t)return;g.gold+=Math.floor(t.spent*.7);g.tw=g.tw.filter(o=>o!==t);g.st=null;tpn()}
+function pri(){if(G.st){G.st.pri=(G.st.pri+1)%5;tpn()}}
+function tpn(){const p=$('tp'),t=G&&G.st;if(!t){p.style.display='none';return}const s=T[t.id],c=t.lv<3?uc(t):0,atk=![9,10,13,14,15].includes(t.id);
+p.style.display='block';p.innerHTML=`<b style="color:${t.id>=14?'#5df7ff':'#55ff9a'};font-size:16px">${s[0]}</b> <span style="color:#ffd45a">${'★'.repeat(t.lv)}${'☆'.repeat(3-t.lv)}</span><div class="d">${s[6]}</div>${atk?`<div class="d">공격력 ${Math.round(t.dmg)} · 사거리 ${Math.round(t.range)} · 주기 ${(t.rate/60).toFixed(2)}s</div><button class="alt" onclick="pri()">🎯 우선순위: ${PN[t.pri]}</button>`:''}<button onclick="up()" ${c?'':'disabled'}>${c?'⚡ 진화 $'+c:'✨ 최종 진화 완료'}</button><button style="background:#c0392b" onclick="sell()">철거 +$${Math.floor(t.spent*.7)}</button>${t.lv>=2&&!t.br?'<div class="d">특화 경로 선택</div><button style="background:#a8324a" onclick="br(1)">⚔ 공격 특화 · 공격력+35% 연사+10% (보조: 효과+30~40%)</button><button class="alt" onclick="br(2)">🛡 지원 특화 · 사거리+25%</button>':t.br?'<div class="d">특화: '+(t.br===1?'⚔ 공격':'🛡 지원')+'</div>':''}<button class="alt" onclick="G.st=null;tpn()">닫기</button>`}
+function skill(i){const g=G;if(!g||!g.run||g.over||g.cd[i]>0)return;g.cd[i]=CD[i]*g.sc;
+if(i===0){g.lives=Math.min(g.m.lives,g.lives+3);toast('💉 생명력 +3')}else if(i===1){g.ov=600;toast('⚡ 10초간 타워 공격력 +50%')}else{g.frz=360;toast('⏸ 6초간 적 정지')}sfx(S.up)}
+// ---------- 입력 ----------
+const M={x:-99,y:-99};function pos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
+cv.addEventListener('pointermove',e=>{const p=pos(e);M.x=p[0];M.y=p[1]});
+cv.addEventListener('pointerdown',ev=>{const g=G;if(!g||!g.run||g.over||g.pause)return;ev.preventDefault();const p=pos(ev),px=p[0],py=p[1];M.x=px;M.y=py;
+const i=g.tw.findIndex(t=>Math.hypot(t.x-px,t.y-py)<(t.id>=14?45:t.id===13?32:26));
+if(i>=0){g.st=g.tw[i];g.sel=null;tpn();return}
+if(g.sel){const id=g.sel,s=T[id],m=id>=14,why=bad(px,py,m?45:25);if(why){toast('⚠ '+why+'에는 설치할 수 없습니다');return}
+if(g.gold<s[1]){toast('예산이 부족합니다!');return}
+g.gold-=s[1];g.tw.push(mkT(id,px,py));g.placed++;ring(px,py,m?170:70,m?'#5df7ff':'#55ff9a');burst(px,py,m?34:14,m?'#5df7ff':'#55ff9a');
+if(m){g.shake=30;g.flash=.3;sfx(S.build);toast('☢️ MEGA UNIT DEPLOYED')}
+if(!ev.shiftKey||m||g.tw.filter(t=>t.id===id).length>=s[5])g.sel=null;chk();return}
+g.st=null;tpn()});
+addEventListener('keydown',e=>{if(!G)return;const k=e.key.toLowerCase();
+if(k===' '){e.preventDefault();startWave()}else if(k==='p')pause();else if(k==='q'||k==='w'||k==='e')skill('qwe'.indexOf(k));else if(k==='f')spd();else if(k==='u')up();else if(k==='s')sell();else if(k==='escape'){G.sel=null;G.st=null;tpn()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.pause&&!G.over)pause()});
+// ---------- 컨트롤 ----------
+let tmr;function toast(s){const b=$('tst');b.textContent=s;b.style.display='block';clearTimeout(tmr);tmr=setTimeout(()=>b.style.display='none',2200)}
+function pause(){const g=G;if(!g||g.over||!g.run||g.pk)return;g.pause=!g.pause;$('pz').style.display=g.pause?'flex':'none';if(bgm&&!muted){if(g.pause)bgm.pause();else bgm.play().catch(()=>{})}}
+function spd(){if(!G)return;G.spd=G.spd%3+1;$('bs').textContent='⏩ '+G.spd+'x'}
+function auto(){if(!G)return;G.auto=!G.auto;$('ba').textContent=G.auto?'🔁 자동':'🔁 수동';if(G.auto&&!G.wv&&!G.nx)G.nx=60}
+function mute(){muted=!muted;$('bm').textContent=muted?'🔇':'🔊';if(bgm){if(muted)bgm.pause();else bgm.play().catch(()=>{})}}
+let dvc=0;function dv(){if(++dvc>=5){dvc=0;$('dev').style.display='block'}}
+function dc(a){const g=G;if(!g)return;if(a==='g')g.gold+=50000;if(a==='l')g.lives+=30;if(a==='k')g.en.forEach(e=>{e.hp=0;die(e)})}
+let MI=0,G=null,itm=[];
+const IL=['20XX년, 정체불명의 변이 바이러스가\n도시를 덮쳤다.','백신은 아직 없다.\n남은 것은 방역 시스템뿐.','당신은 PHD 방역 사령관.','KF94에서 국가 백신소까지 —\n모든 방어선을 지휘하라.','인류의 마지막 방역이\n지금 시작된다.'];
+function runIntro(){$('ib').style.display='none';$('isk').style.display='block';music(S.main);IL.forEach((t,i)=>itm.push(setTimeout(()=>{const l=$('il');l.style.animation='none';l.offsetHeight;l.style.animation='';l.innerHTML=t.replace('\n','<br>')},i*2600)));itm.push(setTimeout(endIntro,IL.length*2600))}
+function endIntro(){itm.forEach(clearTimeout);$('intro').style.display='none';$('title').style.display='flex';music(S.main)}
+const PK=[['🔥 화력 증강','모든 타워 공격력 +12%',g=>g.dm*=1.12],['💰 방역 예산','즉시 $1,500 + 집중실·웨이브 수입 +15%',g=>{g.gold+=1500;g.im*=1.15}],['❤ 긴급 보강','생명력 최대치 +3 · 즉시 +3',g=>{g.m.lives+=3;g.lives+=3}],['🔧 연구 효율','진화 비용 -15%',g=>g.cm*=.85],['🎯 신속 대응','모든 타워 사격 속도 +12%',g=>g.sr*=.88],['⏱ 비상 훈련','스킬 쿨타임 -25%',g=>g.sc*=.75]];
+function showPerks(){const g=G;g.pk=1;g.pause=1;g.po=PK.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,3);$('pkb').innerHTML=g.po.map((k,i)=>`<button onclick="pickPerk(${i})"><b>${PK[k][0]}</b><br>${PK[k][1]}</button>`).join('');$('pk').style.display='flex'}
+function pickPerk(i){const g=G;PK[g.po[i]][2](g);g.pk=0;g.pause=0;$('pk').style.display='none';toast('🎁 '+PK[g.po[i]][0]);sfx(S.up)}
+function br(b){const t=G.st;if(!t||t.br||t.lv<2)return;t.br=b;if(b===1){t.dmg*=1.35;t.rate*=.9}else t.range*=1.25;ring(t.x,t.y,90,b===1?'#ff5470':'#5df7ff');sfx(S.up);tpn()}
+function showTitle(){$('maps').innerHTML=MAPS.map((m,i)=>`<button class="${i===MI?'':'alt'}" onclick="MI=${i};showTitle()">${m.n}</button>`).join('');
+$('diffs').innerHTML=DF.map((d,i)=>{const s=BS[MI+'-'+i]||0;return`<button style="background:${d.c};color:${i===1?'#000':'#fff'}" onclick="start(MI,${i})">${d.n} (${d.w>99?'∞':d.w+'W'})<br>${d.w>99?'최고 '+s+'W':'★'.repeat(s)+'☆'.repeat(3-s)}</button>`}).join('');
+$('lab').innerHTML='방역 포인트 <b style="color:#ffd45a">'+RP+' RP</b><br>'+MD.map(([k,n,d])=>`${n} Lv.${MU[k]}/8 — ${d} <button onclick="buyM('${k}')" ${MU[k]>=8||RP<40*(MU[k]+1)?'disabled':''}>${MU[k]>=8?'MAX':40*(MU[k]+1)+' RP'}</button>`).join('<br>');
+$('ach').innerHTML=AD.map(a=>(AS[a[0]]?'✅ ':'🔒 ')+a[1]).join('<br>')}
+function mkShop(){const s=$('shop');s.innerHTML='';G.cards=[];for(let i=1;i<=15;i++){const d=document.createElement('div');d.className='card'+(i>=13?' mg':'');d.title=T[i][6];
+d.innerHTML=`<img src="static/images/tower_${pad(i)}.png"><b>${T[i][0]}</b><br>$${T[i][1]}<br><small></small>`;
+d.onclick=()=>{const g=G;if(g.tw.filter(t=>t.id===i).length>=T[i][5]){toast('건설 제한 초과!');return}g.sel=g.sel===i?null:i;g.st=null;tpn()};s.appendChild(d);G.cards[i]=[d,d.querySelector('small')]}}
+function start(mi,di){const D=DF[di],P=prep(MAPS[mi]);
+G={mi,di,z:MAPS[mi].z,m:{...D,lives:D.lives+MU.l},dm:1+MU.d*.04,im:1,lk:-999,cb:0,warn:0,cm:1,sr:1,sc:1,pk:0,P,bg:mkBg(P),gold:D.gold+MU.g*150,lives:D.lives+MU.l,wave:0,maxW:D.w,spd:1,run:1,pause:0,over:0,win:0,auto:0,wv:0,nx:0,q:[],next:mkQ(1),sp:0,t:0,en:[],tw:[],pr:[],fx:[],tx:[],cd:[0,0,0],ov:0,frz:0,shake:0,flash:0,sel:null,st:null,kills:0,boss:0,bank:0,ups:0,placed:0};
+$('title').style.display=$('rs').style.display=$('pz').style.display='none';tpn();mkShop();$('bs').textContent='⏩ 1x';$('ba').textContent='🔁 수동';music(S.battle)}
+function end(win){const g=G;if(g.over)return;g.over=1;g.win=win;if(win)chk();music(null);sfx(win?S.win:S.lose);
+RP+=g.wave*2+(win?30*(g.di+1):0);svM();const st=win?(g.lives>=g.m.lives?3:g.lives>=g.m.lives/2?2:1):0,k=g.mi+'-'+g.di;if(g.di===3?g.wave>(BS[k]||0):st>(BS[k]||0)){BS[k]=g.di===3?g.wave:st;try{localStorage.setItem('phd6b',JSON.stringify(BS))}catch(e){}}
+$('rt').textContent=win?'방역 대성공: 인류를 구했습니다!':'방역 실패: 변이 바이러스가 확산되었습니다.';$('rt').style.color=win?'#55ff9a':'#ff5470';
+$('rb').innerHTML=(win?'★'.repeat(st)+'☆'.repeat(3-st)+'<br>':'')+`${MAPS[g.mi].n} · ${g.m.n}<br>🧪 방역 포인트 +${g.wave*2+(win?30*(g.di+1):0)} (보유 ${RP})<br>웨이브 ${g.wave}/${g.maxW} · 처치 ${g.kills} · 보스 ${g.boss}<br>집중실 수익 $${g.bank.toLocaleString()} · 강화 ${g.ups}회`;$('rs').style.display='flex'}
+// ---------- 렌더 ----------
+const AP=Array.from({length:40},()=>({x:R(0,W),y:R(0,H),r:R(.5,1.8),s:R(.5,1.5)}));
+function tSprite(id,px,py,sz,k,lv,al){x.save();x.globalAlpha=al;x.translate(px,py);x.scale(k,k);const img=tI[id],ok=img.complete&&img.naturalWidth;
+if(id<13){x.beginPath();x.arc(0,0,sz/2,0,7);x.save();x.clip();if(ok)x.drawImage(img,-sz/2,-sz/2,sz,sz);else{x.fillStyle='#2ecc71';x.fill()}x.restore();x.lineWidth=3;x.strokeStyle=['#55ff9a','#ffd45a','#ff7bff'][lv-1];x.stroke()}
+else{if(id>=14){x.shadowColor='#5df7ff';x.shadowBlur=22}if(ok)x.drawImage(img,-sz/2,-sz/2,sz,sz);else{x.fillStyle='#5df7ff';x.fillRect(-sz/2,-sz/2,sz,sz)}}
+x.restore()}
+function render(){const g=G,now=performance.now();x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+let sx=0,sy=0;if(g.shake>.5){sx=R(-1,1)*g.shake;sy=R(-1,1)*g.shake;g.shake*=.9}
+x.save();x.translate(sx,sy);x.drawImage(g.bg,0,0,W,H);
+x.fillStyle='#5df7ff';for(const p of AP){x.globalAlpha=.15+Math.sin(now/700+p.x)*.1;x.beginPath();x.arc(p.x,(((p.y-now*p.s*.03)%H)+H)%H,p.r,0,7);x.fill()}x.globalAlpha=1;
+x.save();x.setLineDash([14,16]);x.lineDashOffset=-now/40;x.lineWidth=2;g.P.forEach((P,i)=>{x.strokeStyle=i?'#55ff9a44':'#5df7ff55';x.beginPath();P.pts.forEach((q,j)=>j?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.stroke()});x.restore();
+for(const z of g.z){const b=z[3]==='b';x.beginPath();x.arc(z[0],z[1],z[2],0,7);x.fillStyle=b?'#55ff9a18':'#ff547026';x.fill();x.setLineDash([5,5]);x.strokeStyle=b?'#55ff9a99':'#ff547099';x.lineWidth=2;x.stroke();x.setLineDash([]);x.fillStyle=b?'#55ff9a':'#ff5470';x.font='11px sans-serif';x.textAlign='center';x.fillText(b?'방역 거점 +20%':'오염 구역',z[0],z[1]+4)}
+for(const t of g.tw){const id=t.id,s=id>=14?84:id===13?58:50;
+if((t===g.st||Math.hypot(t.x-M.x,t.y-M.y)<s/2)&&t.range>0){x.beginPath();x.arc(t.x,t.y,t.range,0,7);x.fillStyle='#55ff9a1a';x.fill();x.strokeStyle='#55ff9a66';x.lineWidth=1.5;x.stroke()}
+if(t===g.st){x.beginPath();x.arc(t.x,t.y,s/2+6,0,7);x.strokeStyle='#ffd45a';x.lineWidth=2;x.stroke()}
+if(id>=14){x.beginPath();x.arc(t.x,t.y,s/2+8,0,7);x.strokeStyle=`rgba(93,247,255,${.4+Math.sin(now/150)*.3})`;x.lineWidth=3;x.stroke()}
+tSprite(id,t.x,t.y,s,1+t.an*.015,t.lv,1);
+x.fillStyle='#ffd45a';for(let i=0;i<t.lv;i++){x.beginPath();x.arc(t.x-(t.lv-1)*5+i*10,t.y+s/2+8,2.8,0,7);x.fill()}}
+if(g.sel&&M.x>0){const id=g.sel,s=T[id],m=id>=14,ok=!bad(M.x,M.y,m?45:25)&&g.gold>=s[1];
+if(s[3]){x.beginPath();x.arc(M.x,M.y,s[3],0,7);x.fillStyle=ok?'#55ff9a14':'#ff547022';x.fill();x.strokeStyle=ok?'#55ff9aaa':'#ff5470aa';x.setLineDash([7,7]);x.lineWidth=2;x.stroke();x.setLineDash([])}
+tSprite(id,M.x,M.y,m?(id>=14?84:58):50,1,1,ok?.65:.3)}
+for(const e of g.en){const vis=!e.stealth||e.rev>0,sz=e.sz,img=eI[E[e.k].im||e.k];
+x.save();x.globalAlpha=vis?1:.25;x.translate(e.x,e.y+Math.sin(now/130+e.ph)*2);x.rotate(Math.sin(now/200+e.ph)*.08);
+x.fillStyle='#0006';x.beginPath();x.ellipse(0,sz*.4,sz*.35,sz*.12,0,0,7);x.fill();
+if(img.complete&&img.naturalWidth)x.drawImage(img,-sz/2,-sz/2,sz,sz);else{x.fillStyle='#55ff9a';x.beginPath();x.arc(0,0,sz/2,0,7);x.fill()}x.restore();
+x.lineWidth=2;const ra=(r,c)=>{x.strokeStyle=c;x.beginPath();x.arc(e.x,e.y,sz/2+r,0,7);x.stroke()};
+if(e.mark>0)ra(4,'#5df7ff');if(e.weak>0)ra(8,'#ffd45a');if(e.slow>0||e.fz>0)ra(12,e.fz>0?'#fff':'#7fb8ff');if(e.stealth&&e.rev>0)ra(2,'#b39dff');if(e.k==='armor'&&!(e.mark>0))ra(3,'#aab');if(e.k==='healer')ra(5+Math.sin(now/200)*2,'#55ff9a88');if(e.el){x.save();x.shadowColor='#ffd45a';x.shadowBlur=12;ra(1,'#ffd45a');x.restore()}
+const w=Math.max(24,sz*.9),y=e.y-sz/2-10,f=Math.max(0,e.hp/e.mh);x.fillStyle='#000a';x.fillRect(e.x-w/2,y,w,5);x.fillStyle=f>.5?'#55ff9a':f>.25?'#ffd45a':'#ff5470';x.fillRect(e.x-w/2,y,w*f,5)}
+x.lineCap='round';for(const p of g.pr){x.strokeStyle=p.c;x.lineWidth=3;x.beginPath();x.moveTo(p.px,p.py);x.lineTo(p.x,p.y);x.stroke();x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,2.5,0,7);x.fill()}
+for(const f of g.fx){x.globalAlpha=Math.max(0,f.a);x.strokeStyle=x.fillStyle=f.c;if(f.k==='p'){x.beginPath();x.arc(f.x,f.y,f.r,0,7);x.fill()}else if(f.k==='r'){x.lineWidth=3;x.beginPath();x.arc(f.x,f.y,f.r,0,7);x.stroke()}else{x.lineWidth=f.w;x.beginPath();x.moveTo(f.x,f.y);x.lineTo(f.tx,f.ty);x.stroke()}}x.globalAlpha=1;
+x.font='bold 12px sans-serif';x.textAlign='center';x.lineWidth=3;x.strokeStyle='#000';for(const t of g.tx){x.globalAlpha=Math.min(1,t.a*1.5);x.strokeText(t.t,t.x,t.y);x.fillStyle=t.c;x.fillText(t.t,t.x,t.y)}x.globalAlpha=1;
+if(g.cb>=3&&g.t-g.lk<120){x.font='bold 18px sans-serif';x.textAlign='right';x.fillStyle='#ff7bff';x.fillText('COMBO x'+g.cb,W-12,28)}
+if(g.warn>0){x.fillStyle=`rgba(255,40,70,${.14+.1*Math.sin(now/80)})`;x.fillRect(0,165,W,120);x.textAlign='center';x.fillStyle='#ff5470';x.font='bold 46px sans-serif';x.fillText('⚠ WARNING',W/2,225);x.font='bold 16px sans-serif';x.fillStyle='#fff';x.fillText('BOSS WAVE '+g.wave,W/2,255)}
+const bo=g.en.find(e=>e.k==='boss');if(bo){x.fillStyle='#000a';x.fillRect(200,8,400,12);x.fillStyle='#ff5470';x.fillRect(200,8,400*Math.max(0,bo.hp/bo.mh),12);x.fillStyle='#fff';x.font='bold 11px sans-serif';x.textAlign='center';x.fillText('👑 COVID-19',400,32)}
+if(g.frz>0){x.fillStyle='#7fb8ff1a';x.fillRect(-20,-20,W+40,H+40)}
+if(g.flash>0){x.fillStyle=`rgba(255,255,255,${g.flash})`;x.fillRect(-20,-20,W+40,H+40)}
+x.restore()}
+function cnt(q){const c={};q.forEach(k=>c[k]=(c[k]||0)+1);return c}
+function ui(){const g=G;$('st').textContent=`💰 $${Math.floor(g.gold).toLocaleString()}  ❤ ${g.lives}  🌊 ${g.wave}/${g.maxW>99?'∞':g.maxW}`+(g.ov>0?' ⚡':'')+(g.frz>0?' ⏸':'');
+$('bw').disabled=!!g.wv;[0,1,2].forEach(i=>{const b=$('s'+i),c=g.cd[i];b.disabled=c>0;b.textContent=SK[i]+(c>0?' '+Math.ceil(c/60)+'s':' ('+'QWE'[i]+')')});
+const n=Array(16).fill(0);g.tw.forEach(t=>n[t.id]++);
+for(let i=1;i<=15;i++){const cd=g.cards[i];cd[0].classList.toggle('on',g.sel===i);cd[0].classList.toggle('no',g.gold<T[i][1]||n[i]>=T[i][5]);cd[1].textContent=n[i]+'/'+T[i][5]}
+const txt=g.sel?T[g.sel][0]+' — '+T[g.sel][6]:g.wv?`🌊 웨이브 ${g.wave} 진행 중 · 남은 적 ${g.q.length+g.en.length}`:g.next?'다음 웨이브: '+Object.entries(cnt(g.next)).map(([k,v])=>EM[k]+'×'+v).join(' ')+(g.nx>0?` · 자동 시작 ${Math.ceil(g.nx/60)}s`:''):'';
+if($('prev').textContent!==txt)$('prev').textContent=txt}
+// ---------- 루프 ----------
+function fit(){const s=$('stage'),w=Math.max(200,Math.min(s.clientWidth-8,(s.clientHeight-8)*16/9));cv.style.width=w+'px';cv.style.height=w*9/16+'px'}
+new ResizeObserver(fit).observe($('stage'));fit();
+let last=0,acc=0;
+function loop(t){requestAnimationFrame(loop);const dt=Math.min(100,t-last);last=t;
+if(G){if(G.run&&!G.pause&&!G.over){acc+=dt*G.spd;while(acc>=16.667){acc-=16.667;tick();if(G.over)break}}render();ui()}}
+showTitle();requestAnimationFrame(loop);
+</script></body></html>
