@@ -30,6 +30,7 @@ button.alt{background:#132638;border-color:var(--c)}button:disabled{opacity:.4;c
 @keyframes fi{from{opacity:0;transform:translateY(14px) scale(.97)}}
 #pkb{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}#pkb button{width:190px;min-height:110px;font-size:14px;line-height:1.5}
 #dev{display:none;position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#101a27;border:2px solid var(--y);border-radius:12px;padding:14px;z-index:99}#dev button{display:block;width:100%;margin:5px 0}
+@media (orientation:portrait) and (pointer:coarse){#app{position:fixed;top:0;left:100%;width:100dvh;height:100dvw;max-width:none;margin:0;transform-origin:0 0;transform:rotate(90deg)}}
 </style></head><body><div id="app">
 <div id="hud"><span id="st"></span>
 <span><button class="alt" id="s0" onclick="skill(0)"></button><button class="alt" id="s1" onclick="skill(1)"></button><button class="alt" id="s2" onclick="skill(2)"></button></span>
@@ -167,7 +168,8 @@ p.style.display='block';p.innerHTML=`<b style="color:${t.id>=14?'#5df7ff':'#55ff
 function skill(i){const g=G;if(!g||!g.run||g.over||g.cd[i]>0)return;g.cd[i]=CD[i]*g.sc;
 if(i===0){g.lives=Math.min(g.m.lives,g.lives+3);toast('💉 생명력 +3')}else if(i===1){g.ov=600;toast('⚡ 10초간 타워 공격력 +50%')}else{g.frz=360;toast('⏸ 6초간 적 정지')}sfx(S.up)}
 // ---------- 입력 ----------
-const M={x:-99,y:-99};function pos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
+const M={x:-99,y:-99};const RM=matchMedia('(orientation:portrait) and (pointer:coarse)');
+function pos(e){const r=cv.getBoundingClientRect();return RM.matches?[(e.clientY-r.top)*W/r.height,(r.right-e.clientX)*H/r.width]:[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
 cv.addEventListener('pointermove',e=>{const p=pos(e);M.x=p[0];M.y=p[1]});
 cv.addEventListener('pointerdown',ev=>{const g=G;if(!g||!g.run||g.over||g.pause)return;ev.preventDefault();const p=pos(ev),px=p[0],py=p[1];M.x=px;M.y=py;
 const i=g.tw.findIndex(t=>Math.hypot(t.x-px,t.y-py)<(t.id>=14?45:t.id===13?32:26));
@@ -206,7 +208,7 @@ d.innerHTML=`<img src="static/images/tower_${pad(i)}.png"><b>${T[i][0]}</b><br>$
 d.onclick=()=>{const g=G;if(g.tw.filter(t=>t.id===i).length>=T[i][5]){toast('건설 제한 초과!');return}g.sel=g.sel===i?null:i;g.st=null;tpn()};s.appendChild(d);G.cards[i]=[d,d.querySelector('small')]}}
 function start(mi,di){const D=DF[di],P=prep(MAPS[mi]);
 G={mi,di,z:MAPS[mi].z,m:{...D,lives:D.lives+MU.l},dm:1+MU.d*.04,im:1,lk:-999,cb:0,warn:0,cm:1,sr:1,sc:1,pk:0,P,bg:mkBg(P),gold:D.gold+MU.g*150,lives:D.lives+MU.l,wave:0,maxW:D.w,spd:1,run:1,pause:0,over:0,win:0,auto:0,wv:0,nx:0,q:[],next:mkQ(1),sp:0,t:0,en:[],tw:[],pr:[],fx:[],tx:[],cd:[0,0,0],ov:0,frz:0,shake:0,flash:0,sel:null,st:null,kills:0,boss:0,bank:0,ups:0,placed:0};
-$('title').style.display=$('rs').style.display=$('pz').style.display='none';tpn();mkShop();$('bs').textContent='⏩ 1x';$('ba').textContent='🔁 수동';music(S.battle)}
+$('title').style.display=$('rs').style.display=$('pz').style.display='none';tpn();mkShop();try{if(matchMedia('(pointer:coarse)').matches&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().then(()=>screen.orientation.lock('landscape')).catch(()=>{})}catch(e){}$('bs').textContent='⏩ 1x';$('ba').textContent='🔁 수동';music(S.battle)}
 function end(win){const g=G;if(g.over)return;g.over=1;g.win=win;if(win)chk();music(null);sfx(win?S.win:S.lose);
 RP+=g.wave*2+(win?30*(g.di+1):0);svM();const st=win?(g.lives>=g.m.lives?3:g.lives>=g.m.lives/2?2:1):0,k=g.mi+'-'+g.di;if(g.di===3?g.wave>(BS[k]||0):st>(BS[k]||0)){BS[k]=g.di===3?g.wave:st;try{localStorage.setItem('phd6b',JSON.stringify(BS))}catch(e){}}
 $('rt').textContent=win?'방역 대성공: 인류를 구했습니다!':'방역 실패: 변이 바이러스가 확산되었습니다.';$('rt').style.color=win?'#55ff9a':'#ff5470';
