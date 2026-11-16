@@ -99,8 +99,24 @@ let muted=false,bgm=null,lastSfx=0,AC=null,AI=0;const IOS=/iP(hone|ad|od)/.test(
 function initAudio(){if(AI)return;AI=1;try{AC=new(window.AudioContext||window.webkitAudioContext)();for(const k of['main','battle','boss']){const a=S[k],g=AC.createGain();g.gain.value=a.volume;AC.createMediaElementSource(a).connect(g).connect(AC.destination);a.volume=1}
 for(const k of['shoot','mega','up','build','win','lose']){const v=S[k].volume;fetch(S[k].src).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(b=>{S[k].buf=b;S[k].vol=v}).catch(()=>{})}}catch(e){AC=null}}
 function sfx(a,thr){if(muted)return;const n=performance.now();if(thr){if(n-lastSfx<thr)return;lastSfx=n}if(AC&&a.buf){const o=AC.createBufferSource(),g=AC.createGain();g.gain.value=a.vol;o.buffer=a.buf;o.connect(g).connect(AC.destination);o.start();return}const c=a.cloneNode();c.volume=a.volume;c.play().catch(()=>{})}
-function music(a){if(bgm===a)return;if(bgm)bgm.pause();bgm=a;if(!muted&&a){a.currentTime=0;a.play().catch(()=>{})}}
-addEventListener('pointerdown',()=>{if(IOS&&location.protocol!=='file:')initAudio();if(AC&&AC.state==='suspended')AC.resume();if(!bgm)music(S.main)});
+let musicToken=0;
+function music(a){
+  if(bgm===a){if(!muted&&a&&a.paused)a.play().catch(()=>{});return}
+  const token=++musicToken;
+  [S.main,S.battle,S.boss].forEach(track=>{if(track!==a)track.pause()});
+  bgm=a;
+  if(!muted&&a){
+    a.currentTime=0;
+    const play=a.play();
+    if(play&&play.catch)play.catch(()=>{});
+  }
+}
+addEventListener('pointerdown',()=>{
+  if(IOS&&location.protocol!=='file:')initAudio();
+  if(AC&&AC.state==='suspended')AC.resume();
+  if(!bgm)music(S.main);
+  else if(!muted&&bgm.paused)bgm.play().catch(()=>{});
+});
 // ---------- 데이터 ----------
 const T=[null,
 ['KF94',200,30,110,30,12,'기본 방어선 · 명중한 적을 느리게 만듭니다.'],
@@ -338,5 +354,5 @@ new ResizeObserver(fit).observe($('stage'));fit();
 let last=0,acc=0;
 function loop(t){requestAnimationFrame(loop);const dt=Math.min(100,t-last);last=t;
 if(G){if(G.run&&!G.pause&&!G.over){acc+=dt*G.spd;while(acc>=16.667){acc-=16.667;tick();if(G.over)break}}render();ui()}}
-showTitle();icLoop();requestAnimationFrame(loop);
+showTitle();music(S.main);icLoop();requestAnimationFrame(loop);
 </script></body></html>
