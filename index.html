@@ -91,7 +91,7 @@ canvas{border:2px solid var(--ln);border-radius:10px;box-shadow:0 0 0 1px #000,0
 .ip th,.ip td{border:1px solid var(--ln);padding:3px 6px;white-space:nowrap}.ip th{background:#0b1719;color:#b7d3cf}.ip td:last-child{text-align:left;white-space:normal;min-width:150px}
 .ip canvas#ipv{width:100%;height:auto;aspect-ratio:16/9;cursor:default;display:block;margin:4px 0}
 .ip .ft{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}.ip .ft button{margin:0!important}
-#diffs button,button,.card,#shop,#hud,.ov,#tp,#prev{touch-action:manipulation}
+html,body,*:not(canvas){touch-action:manipulation}
 </style></head><body><div id="app">
 <div id="hud"><span id="st"></span>
 <span><button class="alt" id="s0" onclick="skill(0)"></button><button class="alt" id="s1" onclick="skill(1)"></button><button class="alt" id="s2" onclick="skill(2)"></button></span>
@@ -439,6 +439,7 @@ $('inb').scrollTop=0;$('info').scrollTop=0}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&$('info').style.display==='flex')infoClose()});
 // iPad Safari: 두 번 탭 확대 / 핀치 확대 차단
 (()=>{let lt=0;
+document.addEventListener('touchstart',e=>{if(Date.now()-lt<350&&!(e.touches&&e.touches.length>1)&&e.target.tagName!=='CANVAS')e.preventDefault()},{passive:false});
 document.addEventListener('touchend',e=>{const n=Date.now();if(n-lt<350&&!(e.touches&&e.touches.length)){e.preventDefault();const t=e.target;if(t&&typeof t.click==='function'&&t!==document.body&&t.tagName!=='CANVAS')t.click()}lt=n},{passive:false});
 for(const ev of['gesturestart','gesturechange','gestureend'])document.addEventListener(ev,e=>e.preventDefault(),{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false})})();
