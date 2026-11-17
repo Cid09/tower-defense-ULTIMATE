@@ -91,6 +91,7 @@ canvas{border:2px solid var(--ln);border-radius:10px;box-shadow:0 0 0 1px #000,0
 .ip th,.ip td{border:1px solid var(--ln);padding:3px 6px;white-space:nowrap}.ip th{background:#0b1719;color:#b7d3cf}.ip td:last-child{text-align:left;white-space:normal;min-width:150px}
 .ip canvas#ipv{width:100%;height:auto;aspect-ratio:16/9;cursor:default;display:block;margin:4px 0}
 .ip .ft{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}.ip .ft button{margin:0!important}
+#diffs button,button,.card,#shop,#hud,.ov,#tp,#prev{touch-action:manipulation}
 </style></head><body><div id="app">
 <div id="hud"><span id="st"></span>
 <span><button class="alt" id="s0" onclick="skill(0)"></button><button class="alt" id="s1" onclick="skill(1)"></button><button class="alt" id="s2" onclick="skill(2)"></button></span>
@@ -436,5 +437,10 @@ if(k==='s'){const c=$('ipv'),q=c.getContext('2d'),D=stDef(i),MP=MAPS[D.map];q.dr
 for(const z of MP.z){const b=z[3]==='b';q.beginPath();q.arc(z[0],z[1],z[2],0,7);q.fillStyle=b?'#55ff9a18':'#ff547026';q.fill();q.setLineDash([5,5]);q.strokeStyle=b?'#55ff9a99':'#ff547099';q.lineWidth=2;q.stroke();q.setLineDash([]);q.fillStyle=b?'#55ff9a':'#ff5470';q.font='13px sans-serif';q.textAlign='center';q.fillText(b?'방역 거점 +20%':'오염 구역',z[0],z[1]+4)}}
 $('inb').scrollTop=0;$('info').scrollTop=0}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&$('info').style.display==='flex')infoClose()});
+// iPad Safari: 두 번 탭 확대 / 핀치 확대 차단
+(()=>{let lt=0;
+document.addEventListener('touchend',e=>{const n=Date.now();if(n-lt<350&&!(e.touches&&e.touches.length)){e.preventDefault();const t=e.target;if(t&&typeof t.click==='function'&&t!==document.body&&t.tagName!=='CANVAS')t.click()}lt=n},{passive:false});
+for(const ev of['gesturestart','gesturechange','gestureend'])document.addEventListener(ev,e=>e.preventDefault(),{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false})})();
 showTitle();icLoop();requestAnimationFrame(loop);
 </script></body></html>
