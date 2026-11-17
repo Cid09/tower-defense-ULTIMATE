@@ -71,6 +71,26 @@ canvas{border:2px solid var(--ln);border-radius:10px;box-shadow:0 0 0 1px #000,0
 #ach,#lab{background:var(--pn);border:1px solid var(--ln);border-radius:8px;padding:10px 14px;max-width:560px;width:100%}
 #maps:empty{display:none}
 @media (prefers-reduced-motion:reduce){#il h1,.sk,#intro.fl,.chip.low{animation:none}}
+/* ===== 상세 정보 창 ===== */
+.dw{position:relative;display:flex}.dw>button:first-child{flex:1}
+#diffs .dw button.ib{position:absolute;top:4px;right:4px;min-width:28px;width:28px;min-height:28px;height:28px;margin:0;padding:0;border-radius:50%;background:#0b1719;color:#ffd47a;border:1px solid #2f5a5a;font-size:15px;line-height:1}
+.card{position:relative}.ii{position:absolute;top:0;right:1px;font-style:normal;font-size:13px;line-height:1;padding:4px;color:#ffd47a;border-radius:50%;cursor:pointer}
+#info{z-index:95;justify-content:flex-start;background:#030809ee}
+.ip{margin:auto 0;width:100%;max-width:760px;background:var(--pn);border:1px solid var(--ln);border-top:5px solid #ffb020;border-radius:10px;padding:12px 14px;text-align:left;font-size:13px;line-height:1.6;color:var(--ink)}
+.ip h2{margin:0 0 4px;font-size:20px;display:flex;align-items:center;gap:8px}.ip h2 img{width:44px;height:44px;border-radius:50%;object-fit:cover}
+.ip h2 img.mg{border-radius:0;object-fit:contain}
+.ip .row{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.ip .row button{min-width:0!important;margin:0!important;padding:5px 10px;min-height:32px}
+.ip .row button.sm{padding:3px 8px;min-height:30px;min-width:34px!important}
+.ip .row button.im{padding:2px;width:38px;min-width:38px!important;height:38px}.ip .row button.im img{width:30px;height:30px;border-radius:50%;object-fit:cover;display:block;margin:auto}
+.ip .row button.lk{opacity:.5}
+.ip .tag{display:inline-block;background:#0b1719;border:1px solid var(--ln);border-radius:5px;padding:1px 8px;margin:2px 4px 2px 0;font-weight:600}
+.ip .sec{margin:8px 0 2px;color:#ffd47a;font-weight:700}
+.ip .bx{background:#0b1719;border:1px solid var(--ln);border-radius:6px;padding:6px 10px;margin:3px 0}
+.ip table{width:100%;border-collapse:collapse;font-size:12px;text-align:center;display:block;overflow-x:auto}
+.ip th,.ip td{border:1px solid var(--ln);padding:3px 6px;white-space:nowrap}.ip th{background:#0b1719;color:#b7d3cf}.ip td:last-child{text-align:left;white-space:normal;min-width:150px}
+.ip canvas#ipv{width:100%;height:auto;aspect-ratio:16/9;cursor:default;display:block;margin:4px 0}
+.ip .ft{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}.ip .ft button{margin:0!important}
 </style></head><body><div id="app">
 <div id="hud"><span id="st"></span>
 <span><button class="alt" id="s0" onclick="skill(0)"></button><button class="alt" id="s1" onclick="skill(1)"></button><button class="alt" id="s2" onclick="skill(2)"></button></span>
@@ -80,10 +100,11 @@ canvas{border:2px solid var(--ln);border-radius:10px;box-shadow:0 0 0 1px #000,0
 <div id="shop"></div>
 <div id="intro" class="ov" style="display:flex"><canvas id="icv" style="position:absolute;inset:0;width:100%;height:100%"></canvas><img src="static/images/enemy_normal.png" style="left:8%;top:12%"><img src="static/images/enemy_fast.png" style="right:10%;top:20%;animation-delay:-3s"><img src="static/images/enemy_splitter.png" style="left:14%;bottom:12%;animation-delay:-5s"><img src="static/images/enemy_stealth.png" style="right:16%;bottom:16%;animation-delay:-2s"><img src="static/images/enemy_boss.png" style="left:42%;top:4%;width:150px;opacity:.3;animation-delay:-6s"><div id="il"><h1 style="cursor:default">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div></div><div id="ipbw"><div id="ipb"></div></div><button id="ib" onclick="runIntro()" style="font-size:16px;padding:14px 30px">▶ TOUCH TO START</button><button class="alt" id="isk" onclick="endIntro()" style="display:none;position:absolute;right:14px;bottom:14px;min-width:0">SKIP ▶</button></div>
 <div id="pk" class="ov" style="z-index:80"><h1 style="cursor:default;font-size:30px">🎁 보급품 선택</h1><p>하나를 골라 방역 체계를 강화하세요.</p><div id="pkb"></div></div>
-<div id="title" class="ov"><h1 onclick="dv()">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div><p>바이러스로부터 인류를 보호하세요.</p><div id="maps"></div><div id="diffs"></div><button class="alt" onclick="const a=$('ach');a.style.display=a.style.display=='block'?'none':'block'">🏆 업적</button><button class="alt" onclick="const a=$('lab');a.style.display=a.style.display=='block'?'none':'block'">📈 연구소</button><button class="alt" onclick="expSave()">💾 저장 코드</button><button class="alt" onclick="impSave()">📥 불러오기</button><div id="ach"></div><div id="lab"></div><small style="color:#667">Space 웨이브 · Q/W/E 스킬 · F 배속 · U 진화 · S 철거 · P 정지 · Shift+클릭 연속 설치</small></div>
+<div id="title" class="ov"><h1 onclick="dv()">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div><p>바이러스로부터 인류를 보호하세요.</p><div id="maps"></div><div id="diffs"></div><button class="alt" onclick="const a=$('ach');a.style.display=a.style.display=='block'?'none':'block'">🏆 업적</button><button class="alt" onclick="const a=$('lab');a.style.display=a.style.display=='block'?'none':'block'">📈 연구소</button><button class="alt" onclick="info('s',0)">📖 도감·정보</button><button class="alt" onclick="expSave()">💾 저장 코드</button><button class="alt" onclick="impSave()">📥 불러오기</button><div id="ach"></div><div id="lab"></div><small style="color:#667">Space 웨이브 · Q/W/E 스킬 · F 배속 · U 진화 · S 철거 · P 정지 · Shift+클릭 연속 설치</small></div>
 <div id="pz" class="ov"><h1>[ 일시정지 ]</h1><div><button onclick="pause()">재개</button><button class="alt" onclick="location.reload()">메인으로</button></div></div>
 <div id="rs" class="ov"><h1 id="rt" style="cursor:default"></h1><div id="rb" style="font-size:16px;line-height:1.8"></div><div><button id="nb" style="display:none" onclick="start(DF[G.di+1].map,G.di+1)">다음 스테이지 ▶</button><button onclick="start(G.mi,G.di,G.dx)">다시 도전</button><button class="alt" onclick="location.reload()">메인으로</button></div></div>
 </div>
+<div id="info" class="ov" onclick="if(event.target===this)infoClose()"><div class="ip" id="inb"></div></div>
 <div id="dev"><b>🛠 DEV</b><button onclick="dc('g')">💰 +$50,000</button><button onclick="dc('l')">❤ +30</button><button onclick="dc('k')">☠ 적 전체 제거</button><button onclick="dc('r')">🧪 +1000 RP</button><button class="alt" onclick="$('dev').style.display='none'">닫기</button></div>
 <script>
 const $=id=>document.getElementById(id),cv=$('c'),x=cv.getContext('2d'),W=800,H=450,dpr=Math.min(matchMedia('(pointer:coarse)').matches?1.5:2,window.devicePixelRatio||1);
@@ -99,7 +120,11 @@ let muted=false,bgm=null,lastSfx=0,AC=null,AI=0;const IOS=/iP(hone|ad|od)/.test(
 function initAudio(){if(AI)return;AI=1;try{AC=new(window.AudioContext||window.webkitAudioContext)();for(const k of['main','battle','boss']){const a=S[k],g=AC.createGain();g.gain.value=a.volume;AC.createMediaElementSource(a).connect(g).connect(AC.destination);a.volume=1}
 for(const k of['shoot','mega','up','build','win','lose']){const v=S[k].volume;fetch(S[k].src).then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(b=>{S[k].buf=b;S[k].vol=v}).catch(()=>{})}}catch(e){AC=null}}
 function sfx(a,thr){if(muted)return;const n=performance.now();if(thr){if(n-lastSfx<thr)return;lastSfx=n}if(AC&&a.buf){const o=AC.createBufferSource(),g=AC.createGain();g.gain.value=a.vol;o.buffer=a.buf;o.connect(g).connect(AC.destination);o.start();return}const c=a.cloneNode();c.volume=a.volume;c.play().catch(()=>{})}
-function music(a){if(bgm===a)return;if(bgm)bgm.pause();bgm=a;if(!muted&&a){a.currentTime=0;a.play().catch(()=>{})}}
+[S.main,S.battle,S.boss].forEach(a=>{a.preload='auto';a.load()});
+let mTok=0;
+function music(a){if(bgm===a)return;if(bgm){bgm.pause();bgm.oncanplaythrough=null}bgm=a;const t=++mTok;if(muted||!a)return;
+const go=()=>{a.oncanplaythrough=null;if(t!==mTok||muted||bgm!==a)return;if(a.currentTime>0)a.currentTime=0;a.play().catch(()=>{})};
+if(a.readyState>=4)go();else a.oncanplaythrough=go}
 addEventListener('pointerdown',()=>{if(IOS&&location.protocol!=='file:')initAudio();if(AC&&AC.state==='suspended')AC.resume();if(!bgm)music(S.main)});
 // ---------- 데이터 ----------
 const T=[null,
@@ -219,7 +244,7 @@ g.gold-=c;t.spent+=c;t.lv++;g.ups++;t.dmg*=1.9;t.rate*=t.id===15?.8:.85;t.range*
 function sell(){const g=G,t=g.st;if(!t)return;g.gold+=Math.floor(t.spent*.7);g.tw=g.tw.filter(o=>o!==t);g.st=null;tpn()}
 function pri(){if(G.st){G.st.pri=(G.st.pri+1)%5;tpn()}}
 function tpn(){const p=$('tp'),t=G&&G.st;if(!t){p.style.display='none';return}const s=T[t.id],c=t.lv<3?uc(t):0,atk=![9,10,13,14,15].includes(t.id);
-p.style.display='block';p.innerHTML=`<b style="color:${t.id>=14?'#5df7ff':'#55ff9a'};font-size:16px">${s[0]}</b> <span style="color:#ffd45a">${'★'.repeat(t.lv)}${'☆'.repeat(3-t.lv)}</span><div class="d">${s[6]}</div>${atk?`<div class="d">공격력 ${Math.round(t.dmg)} · 사거리 ${Math.round(t.range)} · 주기 ${(t.rate/60).toFixed(2)}s</div><button class="alt" onclick="pri()">🎯 우선순위: ${PN[t.pri]}</button>`:''}<button onclick="up()" ${c?'':'disabled'}>${c?'⚡ 진화 $'+c:'✨ 최종 진화 완료'}</button><button style="background:#c0392b" onclick="sell()">철거 +$${Math.floor(t.spent*.7)}</button>${t.lv>=2&&!t.br?'<div class="d">특화 경로 선택</div><button style="background:#a8324a" onclick="br(1)">⚔ 공격 특화 · 공격력+35% 연사+10% (보조: 효과+30~40%)</button><button class="alt" onclick="br(2)">🛡 지원 특화 · 사거리+25%</button>':t.br?'<div class="d">특화: '+(t.br===1?'⚔ 공격':'🛡 지원')+'</div>':''}<button class="alt" onclick="G.st=null;tpn()">닫기</button>`}
+p.style.display='block';p.innerHTML=`<b style="color:${t.id>=14?'#5df7ff':'#55ff9a'};font-size:16px">${s[0]}</b> <span style="color:#ffd45a">${'★'.repeat(t.lv)}${'☆'.repeat(3-t.lv)}</span><div class="d">${s[6]}</div>${atk?`<div class="d">공격력 ${Math.round(t.dmg)} · 사거리 ${Math.round(t.range)} · 주기 ${(t.rate/60).toFixed(2)}s</div><button class="alt" onclick="pri()">🎯 우선순위: ${PN[t.pri]}</button>`:''}<button onclick="up()" ${c?'':'disabled'}>${c?'⚡ 진화 $'+c:'✨ 최종 진화 완료'}</button><button style="background:#c0392b" onclick="sell()">철거 +$${Math.floor(t.spent*.7)}</button>${t.lv>=2&&!t.br?'<div class="d">특화 경로 선택</div><button style="background:#a8324a" onclick="br(1)">⚔ 공격 특화 · 공격력+35% 연사+10% (보조: 효과+30~40%)</button><button class="alt" onclick="br(2)">🛡 지원 특화 · 사거리+25%</button>':t.br?'<div class="d">특화: '+(t.br===1?'⚔ 공격':'🛡 지원')+'</div>':''}<button class="alt" onclick="info('t',${t.id})">ⓘ 상세 정보</button><button class="alt" onclick="G.st=null;tpn()">닫기</button>`}
 function skill(i){const g=G;if(!g||!g.run||g.over||g.cd[i]>0)return;g.cd[i]=CD[i]*g.sc;
 if(i===0){g.lives=Math.min(g.m.lives,g.lives+3);toast('💉 생명력 +3')}else if(i===1){g.ov=600;toast('⚡ 10초간 타워 공격력 +50%')}else{g.frz=360;toast('⏸ 6초간 적 정지')}sfx(S.up)}
 // ---------- 입력 ----------
@@ -236,7 +261,7 @@ g.gold-=s[1];g.tw.push(mkT(id,px,py));g.placed++;ring(px,py,m?170:70,m?'#5df7ff'
 if(m){g.shake=30;g.flash=.3;sfx(S.build);toast('☢️ MEGA UNIT DEPLOYED')}
 if(!ev.shiftKey||m||g.tw.filter(t=>t.id===id).length>=s[5])g.sel=null;chk();return}
 g.st=null;tpn()});
-addEventListener('keydown',e=>{if(!G)return;const k=e.key.toLowerCase();
+addEventListener('keydown',e=>{if(!G||$('info').style.display==='flex')return;const k=e.key.toLowerCase();
 if(k===' '){e.preventDefault();startWave()}else if(k==='p')pause();else if(k==='q'||k==='w'||k==='e')skill('qwe'.indexOf(k));else if(k==='f')spd();else if(k==='u')up();else if(k==='s')sell();else if(k==='escape'){G.sel=null;G.st=null;tpn()}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.pause&&!G.over)pause()});
 // ---------- 컨트롤 ----------
@@ -273,12 +298,12 @@ function showPerks(){const g=G;g.pk=1;g.pause=1;g.po=PK.map((_,i)=>i).sort(()=>M
 function pickPerk(i){const g=G;PK[g.po[i]][2](g);g.pk=0;g.pause=0;$('pk').style.display='none';toast('🎁 '+PK[g.po[i]][0]);sfx(S.up)}
 function br(b){const t=G.st;if(!t||t.br||t.lv<2)return;t.br=b;if(b===1){t.dmg*=1.35;t.rate*=.9}else t.range*=1.25;ring(t.x,t.y,90,b===1?'#ff5470':'#5df7ff');sfx(S.up);tpn()}
 function showTitle(){$('maps').innerHTML='';
-$('diffs').innerHTML=DF.map((d,i)=>{const s=BS['s'+i]||0,lk=d.e?!BS.s9:i>0&&!BS['s'+(i-1)];return`<button ${lk?'disabled':''} style="--sc:${d.c}" onclick="start(${d.map},${i})">${lk?'🔒 ':''}${d.n}<br><small>${MAPS[d.map].n} · ${d.e?'∞':d.w+'W'}</small><br>${d.e?'최고 '+s+'W':'★'.repeat(s)+'☆'.repeat(3-s)}</button>`}).join('')+`<button style="--sc:#3fd0c0" onclick="daily()">📅 일일 도전${DY===TD?' ✅':''}<br><small>${MODS[+TD.replace(/-/g,'')%3][0]}</small></button>`;
+$('diffs').innerHTML=DF.map((d,i)=>{const s=BS['s'+i]||0,lk=d.e?!BS.s9:i>0&&!BS['s'+(i-1)];return`<div class="dw"><button ${lk?'disabled':''} style="--sc:${d.c}" onclick="start(${d.map},${i})">${lk?'🔒 ':''}${d.n}<br><small>${MAPS[d.map].n} · ${d.e?'∞':d.w+'W'}</small><br>${d.e?'최고 '+s+'W':'★'.repeat(s)+'☆'.repeat(3-s)}</button><button class="ib" aria-label="스테이지 정보" title="스테이지 정보" onclick="info('s',${i})">ⓘ</button></div>`}).join('')+`<div class="dw"><button style="--sc:#3fd0c0" onclick="daily()">📅 일일 도전${DY===TD?' ✅':''}<br><small>${MODS[+TD.replace(/-/g,'')%3][0]}</small></button><button class="ib" aria-label="스테이지 정보" title="스테이지 정보" onclick="info('s',${DF.length})">ⓘ</button></div>`;
 $('lab').innerHTML='방역 포인트 <b style="color:#ffd45a">'+RP+' RP</b><br>'+MD.map(([k,n,d])=>`${n} Lv.${MU[k]}/8 — ${d} <button onclick="buyM('${k}')" ${MU[k]>=8||RP<40*(MU[k]+1)?'disabled':''}>${MU[k]>=8?'MAX':40*(MU[k]+1)+' RP'}</button>`).join('<br>');
 $('lab').innerHTML+=UNL();
 $('ach').innerHTML=AD.map(a=>(AS[a[0]]?'✅ ':'🔒 ')+a[1]).join('<br>')+'<hr style="border-color:#ffffff22">📖 도감: 적 '+Object.keys(SN).length+'/9 발견 · 타워 '+UL.length+'/15 해금'+(AS.dex?' ✅ (보상 수령)':' (전부 발견 시 +100 RP)')}
 function mkShop(){const s=$('shop');s.innerHTML='';G.cards=[];for(let i=1;i<=15;i++){const d=document.createElement('div');d.className='card'+(i>=13?' mg':'');d.title=T[i][6];
-d.innerHTML=`<img src="static/images/tower_${pad(i)}.png"><b>${T[i][0]}</b><br>$${T[i][1]}<br><small></small>`;
+d.innerHTML=`<i class="ii" title="상세 정보" onclick="event.stopPropagation();info('t',${i})">ⓘ</i><img src="static/images/tower_${pad(i)}.png"><b>${T[i][0]}</b><br>$${T[i][1]}<br><small></small>`;d.oncontextmenu=e=>{e.preventDefault();info('t',i)};
 d.onclick=()=>{const g=G;if(!UL.includes(i)){toast('🔒 타이틀의 연구소에서 해금하세요');return}if(g.tw.filter(t=>t.id===i).length>=T[i][5]){toast('건설 제한 초과!');return}g.sel=g.sel===i?null:i;g.st=null;g.pv=null;tpn()};s.appendChild(d);G.cards[i]=[d,d.querySelector('small')]}}
 function start(mi,di,Dx){const D=Dx||DF[di],P=prep(MAPS[mi]);
 G={mi,di,dx:Dx,z:MAPS[mi].z,m:{...D,lives:D.lives+MU.l},dm:(1+MU.d*.04)*(D.dm||1),im:D.im||1,lk:-999,cb:0,warn:0,hero:{x:400,y:225,tx:400,ty:225,cd:0},hm:0,cm:1,sr:1,sc:1,pk:0,P,bg:mkBg(P),gold:D.gold+MU.g*150,lives:D.lives+MU.l,wave:0,maxW:D.w,spd:1,run:1,pause:0,over:0,win:0,auto:0,wv:0,nx:0,q:[],next:mkQ(1),sp:0,t:0,en:[],tw:[],pr:[],fx:[],tx:[],cd:[0,0,0],ov:0,frz:0,shake:0,flash:0,sel:null,st:null,kills:0,boss:0,bank:0,ups:0,placed:0};
@@ -338,5 +363,78 @@ new ResizeObserver(fit).observe($('stage'));fit();
 let last=0,acc=0;
 function loop(t){requestAnimationFrame(loop);const dt=Math.min(100,t-last);last=t;
 if(G){if(G.run&&!G.pause&&!G.over){acc+=dt*G.spd;while(acc>=16.667){acc-=16.667;tick();if(G.over)break}}render();ui()}}
+
+// ---------- 상세 정보 (스테이지 / 타워 / 적) ----------
+const TI={
+1:{r:'기본 · 감속',ps:'명중한 적을 감속 (이동속도 ×0.6 · 보스는 최대 ×0.65)',sk:'',ef:l=>`감속 ${((50+20*l)/60).toFixed(1)}초`},
+2:{r:'범위 피해',ps:'명중 지점 주변 범위 피해 (피해량의 40%) · 감속된 적에게 +30%',sk:'',ef:l=>`폭발 반경 ${70+12*l}`},
+3:{r:'표식 · 감지',ps:'진단 표식: 표식 대상이 받는 피해 +25% · 표식된 장갑 적은 피해 감소 무효',sk:'사거리 내 은신 적을 감지(공격 가능하게 함)',ef:l=>`표식 ${((120+40*l)/60).toFixed(1)}초`},
+4:{r:'은신 대응',ps:'은신 적에게 +80% 피해',sk:'사거리 내 은신 적을 감지(공격 가능하게 함)',ef:l=>'—'},
+5:{r:'광역 폭발',ps:'넓은 범위 폭발 (피해량의 60%) · 감속된 적에게 +30%',sk:'',ef:l=>`폭발 반경 ${95+15*l}`},
+6:{r:'마무리 · 저격',ps:'체력 45% 이하 적에게 +60% · 표식 대상에게 +30%',sk:'',ef:l=>'—'},
+7:{r:'약점 표식',ps:'약점 표식: 대상이 받는 피해 +20% (다른 타워와 시너지)',sk:'',ef:l=>`약점 ${((120+40*l)/60).toFixed(1)}초`},
+8:{r:'초고속 연사',ps:'초고속 연사 · 약점 표식 대상에게 +25%',sk:'',ef:l=>'—'},
+9:{r:'지원 · 버프',ps:'사거리 내 타워 공격력 +15%/Lv · 사거리 내 타워의 마비 시간 -20%/Lv',sk:'',ef:l=>`아군 공격력 +${15*l}% · 마비 -${20*l}%`},
+10:{r:'지원 · 회복',ps:'',sk:'주기적으로 생명력 1 회복 (자동 발동)',ef:l=>`${(1500-300*l)/60}초마다 생명 +1`},
+11:{r:'강력 감속',ps:'강력 감속 (이동속도 ×0.3 · 보스는 최대 ×0.65)',sk:'Lv3: 20% 확률로 일반 적을 약 0.7초 정지 (보스 제외)',ef:l=>`감속 ${((80+30*l)/60).toFixed(1)}초`+(l>=3?' · 정지 20%':'')},
+12:{r:'보스 · 분열체 킬러',ps:'분열체·보스에게 +80% 피해',sk:'',ef:l=>'—'},
+13:{r:'경제',ps:'',sk:'10초마다 자금 생산 (자동 발동) · 웨이브 수입 보너스 영향',ef:l=>`10초마다 $${[0,100,220,400][l]}`},
+14:{r:'MEGA · 버프 · 광역',ps:'사거리 내 타워 공격력 +25%/Lv · 마비 시간 -30%/Lv',sk:'백신 펄스: 주기적으로 맵 전체 적에게 최대 체력 비례 피해',ef:l=>`아군 +${25*l}% · 펄스 ${(Math.max(420,1000-200*l)/60).toFixed(1)}초마다 (적 최대체력 ${8*l}% · 보스 ${3*l}%)`},
+15:{r:'MEGA · 단일 처형',ps:'',sk:'스마트 돌진: 주기마다 가장 체력이 높은 적에게 구급차 돌진 (사거리 무관)',ef:l=>`고정 피해 + 적 최대체력 ${25+8*l}% (보스 ${6+2*l}%)`}};
+const EI={
+normal:['일반','가장 흔한 기본 바이러스.',1],
+fast:['고속','이동속도가 매우 빠르지만 체력이 낮습니다. 감속 타워가 효과적입니다.',2],
+mini:['미니','작고 빠른 잔챙이. 웨이브가 진행될수록 숫자가 늘고, 분열체·보스가 소환합니다.',3],
+armor:['장갑','표식이 없으면 받는 피해 -40%. 자가키트로 표식을 남기면 피해 감소가 사라집니다.',4],
+splitter:['분열체','처치하면 미니 2마리로 분열합니다. 구급단이 +80% 피해를 줍니다.',5],
+stealth:['은신','자가키트·열화상의 사거리에 들어와야 보이고 공격할 수 있습니다.',7],
+healer:['치료','반경 75 안의 아군을 0.5초마다 최대 체력의 4%씩 회복시킵니다. 먼저 처치하세요.',8],
+stunner:['마비','95 범위 안의 타워를 2초간 마비시킵니다. 본부·국가 백신소가 마비 시간을 줄여줍니다.',8],
+boss:['보스','체력 ×40, 감속 한계 ×0.65. 약 3.3초마다 미니를 소환하며, 놓치면 생명력 -5. 10웨이브마다 등장합니다.',10]};
+let IK='s',IFq=0;
+function infoOpen(){const g=G;if(g&&g.run&&!g.pause&&!g.over&&!g.pk){g.pause=1;IFq=1}$('info').style.display='flex'}
+function infoClose(){$('info').style.display='none';if(IFq&&G&&!G.over)G.pause=0;IFq=0}
+function infoTab(k){info(k,k==='s'?0:k==='t'?1:'normal')}
+function stDef(j){if(j<DF.length)return DF[j];const sd=+TD.replace(/-/g,''),m=MODS[sd%3][2];return{n:'📅 일일 도전',w:20,gold:900,lives:m.lives||12,hp:(1+sd%4*.1)*(m.hp||1),map:sd%3,rp:60,dl:1,md:MODS[sd%3]}}
+function stD(j){const D=stDef(j),MP=MAPS[D.map],P=prep(MP),zb=MP.z.filter(z=>z[3]==='b'),zx=MP.z.filter(z=>z[3]!=='b'),inf=!!D.e,wl=inf?30:D.w;
+const hpAt=w=>fmt(55*Math.pow(1.12,w)*(1+.04*w)*D.hp),lk=!D.dl&&!D.e&&j>0&&!BS['s'+(j-1)]||D.e&&!BS.s9;
+const en=Object.keys(EI).filter(k=>inf||EI[k][2]<=D.w),bossW=inf?'10 · 20 · 30 … (10웨이브마다)':[...Array(Math.floor(D.w/10))].map((_,i)=>(i+1)*10).join(' · ')||'없음';
+const rec=D.dl?'':(inf?'최고 기록 '+(BS['s'+j]||0)+'웨이브':'★'.repeat(BS['s'+j]||0)+'☆'.repeat(3-(BS['s'+j]||0)));
+return `<h2>${D.n}${lk?' 🔒':''}</h2><div class="d">${rec}${lk?' · 이전 스테이지를 클리어하면 열립니다':''}</div>
+<canvas id="ipv" width="800" height="450"></canvas>
+<div><span class="tag">🗺 ${MP.n}</span><span class="tag">경로 ${P.length}갈래</span><span class="tag">경로 길이 ${P.map(p=>Math.round(p.L)).join(' / ')}</span></div>
+<div class="sec">스테이지 정보</div><div class="bx">웨이브 ${inf?'무한':D.w} · 시작 자금 <b>$${D.gold+MU.g*150}</b> · 생명력 <b>${D.lives+MU.l}</b> <small>(연구소 보너스 포함)</small><br>
+일반 적 체력 W1 ≈ ${hpAt(1)} → W${wl} ≈ ${hpAt(wl)}${inf?' …계속 증가':''} · 체력 배율 ×${D.hp.toFixed(2)}<br>
+보스 웨이브: ${bossW}<br>클리어 보상: 방역 포인트 +${D.rp||60} (+웨이브당 2)${D.md?'<br>오늘의 변이: <b>'+D.md[0]+'</b> — '+D.md[1]:''}</div>
+<div class="sec">맵 특성</div><div class="bx">${zb.length?`🟢 <b>방역 거점</b> ${zb.length}곳 — 안에 설치한 타워 공격력 +20%<br>`:''}${zx.length?`🔴 <b>오염 구역</b> ${zx.length}곳 — 타워 설치 불가<br>`:''}${P.length>1?'경로가 여러 갈래여서 적이 양쪽에서 나옵니다. 합류 지점 근처가 유리합니다.':'경로가 한 줄이라 적이 한 방향으로만 옵니다. 굽은 구간에 사거리를 겹치세요.'}</div>
+<div class="sec">등장하는 적 <small style="font-weight:400">(누르면 상세)</small></div><div class="row">${en.map(k=>`<button class="alt sm" onclick="info('e','${k}')">${EM[k]} ${EI[k][0]} <small>${EI[k][2]}W~</small></button>`).join('')}</div>
+${D.dl||!lk&&!G?`<div class="ft"><button onclick="infoClose();${D.dl?'daily()':`start(${D.map},${j})`}">▶ 이 스테이지 시작</button></div>`:''}`}
+function tD(i){const s=T[i],ti=TI[i],atk=s[2]>0,ul=UL.includes(i),mg=i>=14;
+const rows=[1,2,3].map(l=>{const d=s[2]*Math.pow(1.9,l-1),r=s[3]*Math.pow(1.07,l-1),rt=s[4]*Math.pow(i===15?.8:.85,l-1);
+return`<tr><td>Lv.${l}</td><td>${atk?Math.round(d):'—'}</td><td>${i===15?'전체':s[3]?Math.round(r):'—'}</td><td>${rt?(rt/60).toFixed(2)+'초':'—'}</td><td>${atk&&rt?Math.round(d*60/rt):'—'}</td><td>${l>1?'$'+s[1]*l:'설치 $'+s[1]}</td><td>${ti.ef(l)}</td></tr>`}).join('');
+return `<h2><img src="static/images/tower_${pad(i)}.png" class="${mg?'mg':''}">${s[0]}${mg?' <small style="color:#5df7ff">MEGA</small>':''}</h2>
+<div><span class="tag">${ti.r}</span><span class="tag">설치 $${s[1]}</span><span class="tag">최대 ${s[5]}개</span>${ul?'':`<span class="tag" style="color:#ffd47a">🔒 연구소 ${UC[i]} RP로 해금</span>`}</div>
+<div class="bx">${s[6]}</div>
+<div class="sec">레벨별 능력치 <small style="font-weight:400">(버프 적용 전 기본값)</small></div>
+<table><tr><th>레벨</th><th>공격력</th><th>사거리</th><th>공격 주기</th><th>초당 피해</th><th>비용</th><th>효과</th></tr>${rows}</table>
+<div class="sec">패시브</div><div class="bx">${ti.ps||'—'}</div>
+<div class="sec">스킬 · 특수 효과</div><div class="bx">${ti.sk||'—'}</div>
+<div class="sec">특화 (Lv.2 이상, 1회 선택)</div><div class="bx">⚔ 공격 특화: 공격력 +35% · 공격 주기 -10%${[9,14].includes(i)?' · 버프 효과 +30%':i===10?' · 회복 주기 -25%':i===13?' · 수입 +40%':''}<br>🛡 지원 특화: 사거리 +25%</div>
+<div class="d">${atk&&i!==15?'타겟 우선순위(선두/후미/강적/약적/근접)는 설치한 타워를 눌러 바꿀 수 있어요.':''}</div>`}
+function eD(k){const e=E[k],[n,d,fw]=EI[k];
+return `<h2>${EM[k]} ${n}</h2><div><span class="tag">등장 ${fw}웨이브~</span><span class="tag">체력 ×${e.hp}</span><span class="tag">속도 ${e.sp}</span><span class="tag">처치 보상 $${e.b}~</span><span class="tag">누수 시 생명 -${k==='boss'?5:1}</span></div>
+<div class="bx">${d}</div><div class="d">5웨이브부터는 일부 적이 <b>엘리트</b>(체력 ×2.5 · 보상 ×3)로 등장합니다.</div>`}
+function info(k,i){infoOpen();IK=k;const T_=[['s','🗺 스테이지'],['t','🧑‍⚕️ 타워'],['e','🦠 적']];
+if(i===undefined||i==null)i=k==='s'?0:k==='t'?1:'normal';
+const tabs=T_.map(([a,n])=>`<button class="${a===k?'':'alt'}" onclick="infoTab('${a}')">${n}</button>`).join('');
+let ch='',body='';
+if(k==='s'){ch=[...DF,0].map((d,j)=>`<button class="sm ${j===i?'':'alt'}" onclick="info('s',${j})">${j<10?j+1:j===10?'∞':'📅'}</button>`).join('');body=stD(i)}
+else if(k==='t'){ch=Array.from({length:15},(_,n)=>n+1).map(j=>`<button class="im ${j===i?'':'alt'} ${UL.includes(j)?'':'lk'}" title="${T[j][0]}" onclick="info('t',${j})"><img src="static/images/tower_${pad(j)}.png"></button>`).join('');body=tD(i)}
+else{ch=Object.keys(EI).map(j=>`<button class="sm ${j===i?'':'alt'}" title="${EI[j][0]}" onclick="info('e','${j}')">${EM[j]}</button>`).join('');body=eD(i)}
+$('inb').innerHTML=`<div class="row">${tabs}</div><div class="row">${ch}</div>${body}<div class="ft"><button class="alt" onclick="infoClose()">닫기</button></div>`;
+if(k==='s'){const c=$('ipv'),q=c.getContext('2d'),D=stDef(i),MP=MAPS[D.map];q.drawImage(mkBg(prep(MP)),0,0,W,H);
+for(const z of MP.z){const b=z[3]==='b';q.beginPath();q.arc(z[0],z[1],z[2],0,7);q.fillStyle=b?'#55ff9a18':'#ff547026';q.fill();q.setLineDash([5,5]);q.strokeStyle=b?'#55ff9a99':'#ff547099';q.lineWidth=2;q.stroke();q.setLineDash([]);q.fillStyle=b?'#55ff9a':'#ff5470';q.font='13px sans-serif';q.textAlign='center';q.fillText(b?'방역 거점 +20%':'오염 구역',z[0],z[1]+4)}}
+$('inb').scrollTop=0;$('info').scrollTop=0}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&$('info').style.display==='flex')infoClose()});
 showTitle();icLoop();requestAnimationFrame(loop);
 </script></body></html>
