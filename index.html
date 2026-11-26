@@ -137,19 +137,35 @@ html,body,*:not(canvas){touch-action:manipulation}
 @media (min-width:1300px) and (min-height:800px){#hud{font-size:16px;padding:9px 12px}#hud button{font-size:15px;padding:9px 14px;min-height:42px}#prev{font-size:14px;padding:6px 12px}.card{width:96px;font-size:12px;padding:8px 5px}.card img{width:48px;height:48px}.ii{font-size:15px}}
 @media (pointer:coarse){.ii{font-size:16px;padding:6px 5px}.ip .row button{min-height:38px}}
 @media (min-width:1300px) and (min-height:800px){.lb{max-width:1200px}.ip{max-width:900px}}
+/* ===== 튜토리얼 ===== */
+#tut{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:min(94%,600px);z-index:40;display:none;pointer-events:none;background:#0b1719f2;border:2px solid #ffb020;border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.55;box-shadow:0 6px 22px #000b;color:var(--ink);text-align:left}
+#tut .tn{color:#ffd47a;font-weight:800;font-size:12px;margin-bottom:2px}
+#tut .tf{display:flex;gap:6px;justify-content:space-between;align-items:center;margin-top:6px}
+#tut button{pointer-events:auto;min-width:0!important;margin:0!important;padding:5px 14px;min-height:34px}
+#tut .th2{font-size:12px;color:#8fb3ae}
+.tuhl{outline:3px solid #ffd47a!important;outline-offset:2px;animation:tup 1s ease-in-out infinite;position:relative;z-index:35}
+@keyframes tup{50%{outline-color:#ff8a00;box-shadow:0 0 16px #ffd47a}}
+#tupr{z-index:88;background:#030809ee}
+#app.cmp #tut{font-size:12px;padding:6px 10px;width:min(80%,520px)}
+/* ===== 이어하기 ===== */
+#rsm{width:100%;max-width:780px}
+.rsc{display:flex;gap:10px;align-items:center;justify-content:space-between;background:#3a2c0d;border:2px solid #ffb020;border-radius:10px;padding:8px 12px;text-align:left;margin:4px 0;font-size:14px;line-height:1.5}
+.rsc small{color:#d9c28a}
+#rsm button{min-width:0!important;margin:0 0 0 6px!important;padding:8px 16px}
 </style></head><body><div id="app">
 <div id="hud"><span id="st"></span>
 <span><button class="alt" id="s0" onclick="skill(0)"></button><button class="alt" id="s1" onclick="skill(1)"></button><button class="alt" id="s2" onclick="skill(2)"></button></span>
 <span><button id="bw" onclick="startWave()">▶ 웨이브</button><button class="alt" id="bs" onclick="spd()">⏩ 1x</button><button class="alt" id="ba" onclick="auto()">🔁 수동</button><button class="alt" id="bh" onclick="hm()">🧑‍⚕️</button><button class="alt" onclick="pause()">⏸</button><button class="alt" id="bm" onclick="mute()">🔊</button><button class="alt" id="bf" onclick="fs()" title="전체 화면">⛶</button></span></div>
 <div id="prev"></div>
-<div id="stage"><canvas id="c" width="800" height="450"></canvas><div id="tp"></div><div id="tst"></div></div>
+<div id="stage"><canvas id="c" width="800" height="450"></canvas><div id="tp"></div><div id="tst"></div><div id="tut"><div class="tn" id="tutn"></div><div id="tutx"></div><div class="tf"><span class="th2" id="tuth">직접 해보세요 👆</span><span style="display:flex;gap:6px;margin-left:auto"><button class="alt" onclick="tuSkip()">⏭ 건너뛰기</button><button id="tutnx" onclick="tuNext()">다음 ▶</button></span></div></div></div>
 <div id="shop"></div>
 <div id="intro" class="ov" style="display:flex"><canvas id="icv" style="position:absolute;inset:0;width:100%;height:100%"></canvas><img src="static/images/enemy_normal.png" style="left:8%;top:12%"><img src="static/images/enemy_fast.png" style="right:10%;top:20%;animation-delay:-3s"><img src="static/images/enemy_splitter.png" style="left:14%;bottom:12%;animation-delay:-5s"><img src="static/images/enemy_stealth.png" style="right:16%;bottom:16%;animation-delay:-2s"><img src="static/images/enemy_boss.png" style="left:42%;top:4%;width:150px;opacity:.3;animation-delay:-6s"><div id="il"><h1 style="cursor:default">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div></div><div id="ipbw"><div id="ipb"></div></div><button id="ib" onclick="runIntro()" style="font-size:16px;padding:14px 30px">▶ TOUCH TO START</button><button class="alt" id="isk" onclick="endIntro()" style="display:none;position:absolute;right:14px;bottom:14px;min-width:0">SKIP ▶</button></div>
 <div id="pk" class="ov" style="z-index:80"><h1 style="cursor:default;font-size:30px">🎁 보급품 선택</h1><p>하나를 골라 방역 체계를 강화하세요.</p><div id="pkb"></div></div>
-<div id="title" class="ov"><h1 onclick="dv()">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div><p>바이러스로부터 인류를 보호하세요.</p><div id="maps"></div><div id="diffs"></div><div class="tb"><button class="alt" onclick="const a=$('ach');a.style.display=a.style.display=='block'?'none':'block'">🏆 업적</button><button class="alt" onclick="const a=$('lab');a.style.display=a.style.display=='block'?'none':'block'">📈 연구소</button><button class="alt" onclick="info('s',0)">📖 도감·정보</button><button class="alt ezb" onclick="setEZ()"></button><button class="alt" onclick="fs()">⛶ 전체 화면</button><button class="alt" onclick="expSave()">💾 저장 코드</button><button class="alt" onclick="impSave()">📥 불러오기</button></div><div id="ach"></div><div id="lab"></div><small style="color:#667">Space 웨이브 · Q/W/E 스킬 · F 배속 · U 진화 · S 철거 · P 정지 · Shift+클릭 연속 설치</small></div>
+<div id="title" class="ov"><h1 onclick="dv()">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div><p>바이러스로부터 인류를 보호하세요.</p><div id="maps"></div><div id="rsm"></div><div id="diffs"></div><div class="tb"><button class="alt" onclick="const a=$('ach');a.style.display=a.style.display=='block'?'none':'block'">🏆 업적</button><button class="alt" onclick="const a=$('lab');a.style.display=a.style.display=='block'?'none':'block'">📈 연구소</button><button class="alt" onclick="tuStart()">🎓 튜토리얼</button><button class="alt" onclick="info('s',0)">📖 도감·정보</button><button class="alt ezb" onclick="setEZ()"></button><button class="alt" onclick="fs()">⛶ 전체 화면</button><button class="alt" id="bkb" onclick="bkOpen()">💾 백업·복원</button></div><div id="ach"></div><div id="lab"></div><small style="color:#667">Space 웨이브 · Q/W/E 스킬 · F 배속 · U 진화 · S 철거 · P 정지 · Shift+클릭 연속 설치</small></div>
 <div id="pz" class="ov"><h1>[ 일시정지 ]</h1><div><button onclick="pause()">재개</button><button class="alt" onclick="location.reload()">메인으로</button><button class="alt ezb" onclick="setEZ()"></button></div></div>
 <div id="rs" class="ov"><h1 id="rt" style="cursor:default"></h1><div id="rb" style="font-size:16px;line-height:1.8"></div><div><button id="nb" style="display:none" onclick="start(DF[G.di+1].map,G.di+1)">다음 스테이지 ▶</button><button onclick="start(G.mi,G.di,G.dx)">다시 도전</button><button class="alt" onclick="location.reload()">메인으로</button></div></div>
 </div>
+<div id="tupr" class="ov"><div class="ip" style="max-width:460px;text-align:center"><h2 style="justify-content:center">🎓 튜토리얼</h2><div style="margin:8px 0 14px">처음이신가요?<br>1스테이지에서 <b>직접 해보며</b> 기본 조작을 알려드려요. (약 2분)<br><small style="color:#8fb3ae">나중에 타이틀의 “🎓 튜토리얼” 버튼으로 다시 볼 수 있어요.</small></div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button onclick="tuStart()" style="min-width:150px">🎓 들어볼게요</button><button class="alt" onclick="tuNo()" style="min-width:150px">⏭ 스킵</button></div></div></div>
 <div id="lobby" class="ov"><div class="lb" id="lb"></div></div>
 <div id="info" class="ov" onclick="if(event.target===this)infoClose()"><div class="ip" id="inb"></div></div>
 <div id="dev"><b>🛠 DEV</b><button onclick="dc('g')">💰 +$50,000</button><button onclick="dc('l')">❤ +30</button><button onclick="dc('k')">☠ 적 전체 제거</button><button onclick="dc('r')">🧪 +1000 RP</button><button class="alt" onclick="$('dev').style.display='none'">닫기</button></div>
@@ -281,7 +297,7 @@ function mkQ(w){const q=[],pool=['normal','normal','normal'];if(w>=2)pool.push('
 if(w%10===0)q.push('boss');for(let i=0,n=7+Math.floor(w*1.5);i<n;i++)q.push(pool[Math.random()*pool.length|0]);for(let i=0;i<Math.floor(w/3);i++)q.push('mini');return q}
 function spawn(k,pi,d=0){const g=G,b=E[k],hp=55*Math.pow(1.12,g.wave)*(1+.04*g.wave)*b.hp*g.m.hp;const el=pi===undefined&&k!=='boss'&&g.wave>=5&&Math.random()<Math.min(.25,.04+g.wave*.006);pi=pi??(Math.random()*g.P.length|0);const q=at(g.P[pi],d);
 SN[k]=1;g.en.push({k,pi,d,hp:hp*(el?2.5:1),mh:hp*(el?2.5:1),el,sp:b.sp*(g.m.spx||1),sz:b.sz*(el?1.15:1),b:Math.round(b.b*(1+g.wave*.07))*(el?3:1),stealth:k==='stealth',slow:0,sf:1,fz:0,mark:0,weak:0,rev:0,ph:Math.random()*6,bt:0,x:q[0],y:q[1]})}
-function startWave(){const g=G;if(!g||!g.run||g.wv||g.over)return;g.wave++;g.q=g.next;g.next=g.wave<g.maxW?mkQ(g.wave+1):null;g.wv=1;g.sp=30;g.nx=0;const b=g.wave%10===0;music(b?S.boss:S.battle);if(b){toast('🚨 WARNING // BOSS WAVE '+g.wave);g.warn=150}chk()}
+function startWave(){const g=G;if(!g||!g.run||g.wv||g.over)return;snapSave();g.wave++;g.q=g.next;g.next=g.wave<g.maxW?mkQ(g.wave+1):null;g.wv=1;g.sp=30;g.nx=0;const b=g.wave%10===0;music(b?S.boss:S.battle);if(b){toast('🚨 WARNING // BOSS WAVE '+g.wave);g.warn=150}chk()}
 // ---------- 전투 ----------
 const fmt=v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':''+Math.round(v);
 function ring(px,py,mr,c){if(G.fx.length<500)G.fx.push({k:'r',x:px,y:py,r:6,mr,a:1,c})}
@@ -335,7 +351,7 @@ g.pr=g.pr.filter(p=>{p.px=p.x;p.py=p.y;p.x+=(p.tx-p.x)*.5;p.y+=(p.ty-p.y)*.5;ret
 g.fx=g.fx.filter(f=>{if(f.k==='p'){f.x+=f.vx;f.y+=f.vy;f.vx*=.96;f.vy*=.96;f.a-=.04}else if(f.k==='r'){f.r+=(f.mr-f.r)*.18+1;f.a-=.045}else f.a-=.14;return f.a>0});
 g.tx=g.tx.filter(t=>{t.y-=.5;t.a-=.018;return t.a>0});
 if(g.lives<=0){g.lives=0;end(false);return}
-if(g.wv&&!g.q.length&&!g.en.length){g.wv=0;if(g.wave>=g.maxW){end(true);return}const bn=Math.round((100+g.wave*25)*g.im);g.gold+=bn;toast('✅ 웨이브 '+g.wave+' 방어 성공 +$'+bn);music(S.battle);chk();if(g.wave%5===0)showPerks();if(g.auto)g.nx=150}}
+if(g.wv&&!g.q.length&&!g.en.length){g.wv=0;if(g.wave>=g.maxW){end(true);return}const bn=Math.round((100+g.wave*25)*g.im);g.gold+=bn;toast('✅ 웨이브 '+g.wave+' 방어 성공 +$'+bn);music(S.battle);chk();if(g.wave%5===0)showPerks();snapSave();if(g.auto)g.nx=150}}
 // ---------- 설치/강화 ----------
 function bad(px,py,r){if(px<r||px>W-r||py<r||py>H-r)return'맵 밖';
 for(const P of G.P)for(const g of P.s){const dx=g.b[0]-g.a[0],dy=g.b[1]-g.a[1],u=Math.max(0,Math.min(1,((px-g.a[0])*dx+(py-g.a[1])*dy)/(dx*dx+dy*dy)));if(Math.hypot(px-g.a[0]-u*dx,py-g.a[1]-u*dy)<r*.6+30)return'경로 위'}
@@ -373,9 +389,6 @@ function pause(){const g=G;if(!g||g.over||!g.run||g.pk)return;g.pause=!g.pause;$
 function spd(){if(!G)return;G.spd=G.spd%3+1;$('bs').textContent='⏩ '+G.spd+'x'}
 function auto(){if(!G)return;G.auto=!G.auto;$('ba').textContent=G.auto?'🔁 자동':'🔁 수동';if(G.auto&&!G.wv&&!G.nx)G.nx=60}
 function mute(){muted=!muted;$('bm').textContent=muted?'🔇':'🔊';if(bgm){if(muted)bgm.pause();else bgm.play().catch(()=>{})}}
-const SKY=['phd6a','phd6b','phd6m','phd6p','phd6d','phd6u','phd6x'];
-function expSave(){const o={};SKY.forEach(k=>o[k]=localStorage.getItem(k));const c=btoa(unescape(encodeURIComponent(JSON.stringify(o))));(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>alert('저장 코드가 복사되었습니다.\n다른 기기에서 [불러오기]에 붙여넣으세요.')).catch(()=>prompt('이 코드를 복사해서 보관하세요',c))}
-function impSave(){const c=prompt('저장 코드를 붙여넣으세요');if(!c)return;try{const o=JSON.parse(decodeURIComponent(escape(atob(c.trim()))));SKY.forEach(k=>{if(o[k]!=null)localStorage.setItem(k,o[k])});alert('불러오기 완료! 새로고침합니다.');location.reload()}catch(e){alert('올바르지 않은 저장 코드입니다.')}}
 let dvc=0;function dv(){if(++dvc>=5){dvc=0;$('dev').style.display='block'}}
 function dc(a){if(a==='r'){RP+=1000;svM();showTitle();return}const g=G;if(!g)return;if(a==='g')g.gold+=50000;if(a==='l')g.lives+=30;if(a==='k')g.en.forEach(e=>{e.hp=0;die(e)})}
 let MI=0,G=null,itm=[];
@@ -395,12 +408,12 @@ if(!inv&&(i===2||i===5)){I.classList.add('fl');$('icv').classList.add('sk');sfx(
 if(slam)itm.push(setTimeout(()=>{clearInterval(tw);l.style.animation='';l.innerHTML='<h1 style="cursor:default;font-size:clamp(40px,11vw,100px);animation:slam .7s both">PHD: DEFENSE</h1><div class="sub">방역 사령부 · 리메이크 V6</div>';I.classList.add('sk');sfx(S.build);setTimeout(()=>I.classList.remove('sk'),500)},L.length*2800));
 itm.push(setTimeout(done,L.length*2800+(slam?2600:600)))}
 function runIntro(){story(IL,endIntro,1)}
-function endIntro(){itm.forEach(clearTimeout);clearInterval(tw);$('intro').style.display='none';$('title').style.display='flex';music(S.main);showTitle()}
+function endIntro(){itm.forEach(clearTimeout);clearInterval(tw);$('intro').style.display='none';$('title').style.display='flex';music(S.main);showTitle();tuAsk()}
 const PK=[['🔥 화력 증강','모든 타워 공격력 +12%',g=>g.dm*=1.12],['💰 방역 예산','즉시 $1,500 + 집중실·웨이브 수입 +15%',g=>{g.gold+=1500;g.im*=1.15}],['❤ 긴급 보강','생명력 최대치 +3 · 즉시 +3',g=>{g.m.lives+=3;g.lives+=3}],['🔧 연구 효율','진화 비용 -15%',g=>g.cm*=.85],['🎯 신속 대응','모든 타워 사격 속도 +12%',g=>g.sr*=.88],['⏱ 비상 훈련','스킬 쿨타임 -25%',g=>g.sc*=.75]];
 function showPerks(){const g=G;g.pk=1;g.pause=1;g.po=PK.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,3);$('pkb').innerHTML=g.po.map((k,i)=>`<button onclick="pickPerk(${i})"><b>${PK[k][0]}</b><br>${PK[k][1]}</button>`).join('');$('pk').style.display='flex'}
-function pickPerk(i){const g=G;PK[g.po[i]][2](g);g.pk=0;g.pause=0;$('pk').style.display='none';toast('🎁 '+PK[g.po[i]][0]);sfx(S.up)}
+function pickPerk(i){const g=G;PK[g.po[i]][2](g);g.pk=0;g.pause=0;$('pk').style.display='none';toast('🎁 '+PK[g.po[i]][0]);sfx(S.up);snapSave()}
 function br(b){const t=G.st;if(!t||t.br||t.lv<2)return;t.br=b;if(b===1){t.dmg*=1.35;t.rate*=.9}else t.range*=1.25;ring(t.x,t.y,90,b===1?'#ff5470':'#5df7ff');sfx(S.up);tpn()}
-function showTitle(){setTimeout(fillThumbs,0);$('maps').innerHTML='';
+function showTitle(){setTimeout(()=>{fillThumbs();rsmRender();bkLbl()},0);$('maps').innerHTML='';
 $('diffs').innerHTML=DF.map((d,i)=>{const s=BS['s'+i]||0,lk=d.e?!BS.s9:i>0&&!BS['s'+(i-1)];return`<div class="dw"><button ${lk?'disabled':''} style="--sc:${d.c}" onclick="lobby(${i})"><img class="th" data-m="${d.map}" src="${THC[d.map]||'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}">${lk?'🔒 ':''}${d.n}<br><small>${MAPS[d.map].n} · ${d.e?'∞':d.w+'W'}</small><br>${d.e?'최고 '+s+'W':'★'.repeat(s)+'☆'.repeat(3-s)}</button><button class="ib" aria-label="스테이지 정보" title="스테이지 정보" onclick="info('s',${i})">ⓘ</button></div>`}).join('')+`<div class="dw"><button style="--sc:#3fd0c0" onclick="lobby(${DF.length})"><img class="th" data-m="${+TD.replace(/-/g,'')%MAPS.length}" src="${THC[+TD.replace(/-/g,'')%MAPS.length]||'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='}">📅 일일 도전${DY===TD?' ✅':''}<br><small>${MODS[+TD.replace(/-/g,'')%3][0]}</small></button><button class="ib" aria-label="스테이지 정보" title="스테이지 정보" onclick="info('s',${DF.length})">ⓘ</button></div>`;
 $('lab').innerHTML='방역 포인트 <b style="color:#ffd45a">'+RP+' RP</b><br>'+MD.map(([k,n,d])=>`${n} Lv.${MU[k]}/8 — ${d} <button onclick="buyM('${k}')" ${MU[k]>=8||RP<40*(MU[k]+1)?'disabled':''}>${MU[k]>=8?'MAX':40*(MU[k]+1)+' RP'}</button>`).join('<br>');
 $('lab').innerHTML+=UNL();
@@ -408,10 +421,10 @@ $('ach').innerHTML=AD.map(a=>(AS[a[0]]?'✅ ':'🔒 ')+a[1]).join('<br>')+'<hr s
 function mkShop(){const s=$('shop');s.innerHTML='';G.cards=[];for(let i=1;i<=15;i++){const d=document.createElement('div');d.className='card'+(i>=13?' mg':'');d.style.display=TM.includes(i)?'':'none';d.title=T[i][6];
 d.innerHTML=`<i class="ii" title="상세 정보" onclick="event.stopPropagation();info('t',${i})">ⓘ</i><img src="static/images/tower_${pad(i)}.png"><b>${T[i][0]}</b><br>$${T[i][1]}<br><small></small>`;d.oncontextmenu=e=>{e.preventDefault();info('t',i)};
 d.onclick=()=>{const g=G;if(!UL.includes(i)){toast('🔒 타이틀의 연구소에서 해금하세요');return}if(g.tw.filter(t=>t.id===i).length>=T[i][5]){toast('건설 제한 초과!');return}g.sel=g.sel===i?null:i;g.st=null;g.pv=null;tpn()};s.appendChild(d);G.cards[i]=[d,d.querySelector('small')]}}
-function start(mi,di,Dx){tmFix();const D=Dx||DF[di],P=prep(MAPS[mi]);
+function start(mi,di,Dx){tmFix();if(!RES)clearSave();const D=Dx||DF[di],P=prep(MAPS[mi]);
 G={mi,di,dx:Dx,z:MAPS[mi].z,m:{...D,lives:D.lives+MU.l},dm:(1+MU.d*.04)*(D.dm||1),im:D.im||1,lk:-999,cb:0,warn:0,hero:{x:400,y:225,tx:400,ty:225,cd:0},hm:0,cm:1,sr:1,sc:1,pk:0,P,bg:mkBg(P,mi),gold:D.gold+MU.g*150,lives:D.lives+MU.l,wave:0,maxW:D.w,spd:1,run:1,pause:0,over:0,win:0,auto:0,wv:0,nx:0,q:[],next:mkQ(1),sp:0,t:0,en:[],tw:[],pr:[],fx:[],tx:[],cd:[0,0,0],ov:0,frz:0,shake:0,flash:0,sel:null,st:null,kills:0,boss:0,bank:0,ups:0,placed:0};
 $('title').style.display=$('rs').style.display=$('pz').style.display='none';tpn();mkShop();try{if(matchMedia('(pointer:coarse)').matches&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().then(()=>screen.orientation.lock('landscape')).catch(()=>{})}catch(e){}$('bs').textContent='⏩ 1x';$('ba').textContent='🔁 수동';music(S.battle)}
-function end(win){const g=G;if(g.over)return;g.over=1;g.win=win;if(win)chk();music(null);sfx(win?S.win:S.lose);
+function end(win){const g=G;if(g.over)return;g.over=1;clearSave();g.win=win;if(win)chk();music(null);sfx(win?S.win:S.lose);
 const rw=g.wave*2+(win?(g.m.rp||60):0)+(win&&g.m.dl&&DY!==TD?150:0);RP+=rw;if(win&&g.m.dl)DY=TD;if(Object.keys(SN).length>=9&&!AS.dex){AS.dex=1;RP+=100;try{localStorage.setItem('phd6a',JSON.stringify(AS))}catch(e){}}svM();const st=win?(g.lives>=g.m.lives?3:g.lives>=g.m.lives/2?2:1):0,k='s'+g.di;if(g.m.w>99?g.wave>(BS[k]||0):st>(BS[k]||0)){BS[k]=g.m.w>99?g.wave:st;try{localStorage.setItem('phd6b',JSON.stringify(BS))}catch(e){}}
 $('rt').textContent=win?'방역 대성공: 인류를 구했습니다!':'방역 실패: 변이 바이러스가 확산되었습니다.';$('rt').style.color=win?'#55ff9a':'#ff5470';
 $('rb').innerHTML=(win?'★'.repeat(st)+'☆'.repeat(3-st)+'<br>':'')+`${MAPS[g.mi].n} · ${g.m.n}<br>🧪 방역 포인트 +${rw} (보유 ${RP})<br>웨이브 ${g.wave}/${g.maxW} · 처치 ${g.kills} · 보스 ${g.boss}<br>집중실 수익 $${g.bank.toLocaleString()} · 강화 ${g.ups}회`;$('rs').style.display='flex';$('nb').style.display=win&&!g.dx&&g.di<9?'inline-block':'none';if(win&&g.m.fin)setTimeout(()=>{$('rs').style.display='none';story(OL,endIntro,0,1)},2400)}
@@ -467,7 +480,7 @@ const tg=Math.max(1,Math.min(matchMedia('(pointer:coarse)').matches?2:2.5,w*(win
 new ResizeObserver(fit).observe($('stage'));fit();
 let last=0,acc=0;
 function loop(t){requestAnimationFrame(loop);const dt=Math.min(100,t-last);last=t;
-if(G){if(G.run&&!G.pause&&!G.over){acc+=dt*G.spd;while(acc>=16.667){acc-=16.667;tick();if(G.over)break}}render();ui()}}
+if(G){if(G.run&&!G.pause&&!G.over){acc+=dt*G.spd;while(acc>=16.667){acc-=16.667;tick();if(G.over)break}}render();ui();if(TUT.on)tuTick();if(!G.wv&&t-lastSnap>4000){lastSnap=t;snapSave()}}}
 
 // ---------- 상세 정보 (스테이지 / 타워 / 적) ----------
 const TI={
@@ -575,7 +588,7 @@ $('lb').innerHTML=`<div class="lt"><div class="lm"><canvas id="lmc" width="800" 
 <div class="ft"><button class="alt" onclick="lobbyClose()">◀ 뒤로</button><button class="alt" onclick="info('s',${j})">ⓘ 스테이지 정보</button><button class="go" onclick="lobbyGo()" ${lk?'disabled':''}>${lk?'🔒 잠김':'▶ 출격'}</button></div></div>`;
 $('lobby').style.display='flex';const q=$('lmc').getContext('2d');q.drawImage(mkBg(prep(MP),D.map),0,0,W,H);for(const z of MP.z)zoneDraw(q,z,13,false);tmRender();$('lobby').scrollTop=0}
 function lobbyClose(){$('lobby').style.display='none'}
-function lobbyGo(){tmFix();const D=stDef(LB.j);if(lbLocked(LB.j))return;if(!TM.length||!TM.some(i=>T[i][2]>0)){toast('⚠ 공격 타워를 1개 이상 편성하세요');return}tmSave();lobbyClose();if(D.dl)daily();else start(D.map,LB.j)}
+function lobbyGo(){tmFix();const D=stDef(LB.j);if(lbLocked(LB.j))return;if(!TM.length||!TM.some(i=>T[i][2]>0)){toast('⚠ 공격 타워를 1개 이상 편성하세요');return}if(loadSave()&&!confirm('진행 중인 게임이 있어요.\n새로 시작하면 이어하기 기록이 사라져요. 새로 시작할까요?'))return;tmSave();lobbyClose();if(D.dl)daily();else start(D.map,LB.j)}
 
 // ---------- 반응형 ----------
 function fillThumbs(){let k=0;document.querySelectorAll('#diffs img.th[data-m]').forEach(im=>{const m=+im.dataset.m;if(THC[m]){im.src=THC[m];return}setTimeout(()=>{if(im.isConnected)im.src=thumb(m)},40*(++k))})}
@@ -592,5 +605,79 @@ try{const q=r.call(d);const lk=()=>{try{if(matchMedia('(pointer:coarse)').matche
 if(q&&q.then)q.then(lk).catch(()=>alert('전체 화면으로 전환하지 못했어요. 브라우저 설정을 확인해 주세요.'));else lk()}catch(e){}}
 ['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{const b=$('bf');if(b)b.textContent=fsOn()?'🗗':'⛶'}));
 if(navigator.standalone||matchMedia('(display-mode:standalone)').matches||matchMedia('(display-mode:fullscreen)').matches){const b=$('bf');if(b)b.style.display='none'}
+
+// ---------- 튜토리얼 (선택형) ----------
+let TUT={on:0,i:0},TUq=null;
+function tuGet(){try{return localStorage.getItem('phd6tu')}catch(e){return TUq}}
+function tuSet(v){TUq=v;try{localStorage.setItem('phd6tu',v)}catch(e){}}
+const firstCard=()=>[...document.querySelectorAll('#shop .card')].find(c=>c.style.display!=='none');
+const TUS=[
+{t:'환영합니다, 신입 요원님! 👋<br>바이러스(☣)가 병원(🏥)에 닿지 못하게 막는 게임이에요. 기본 조작을 직접 해보며 알려드릴게요.',nx:1},
+{t:'① 아래 <b>타워 상점</b>에서 타워 하나를 눌러 선택하세요.',el:firstCard,c:g=>g.sel!=null},
+{t:'② 맵에서 <b style="color:#55ff9a">초록색</b>으로 밝아진 곳을 눌러 설치하세요. 어두운 곳(길·오염 구역)에는 놓을 수 없어요.',el:()=>$('c'),c:g=>g.tw.length>0},
+{t:'③ 설치한 타워를 <b>눌러보세요</b>. 진화·철거·타겟 설정을 할 수 있어요.',c:g=>!!g.st},
+{t:'④ <b>진화</b>(U 키)하면 공격력과 사거리가 올라가요. 자금이 모이면 해보세요. (지금은 건너뛰어도 돼요)',nx:1,c:g=>g.tw.some(t=>t.lv>=2)},
+{t:'⑤ 준비됐으면 <b>▶ 웨이브</b>를 눌러 적을 불러오세요. 흰 화살표(➤)가 적이 가는 방향이에요.',el:()=>$('bw'),c:g=>!!g.wv||g.wave>0},
+{t:'⑥ <b>속도</b> 버튼으로 1x → 2x → 3x 배속을 바꿀 수 있어요. (F 키)',el:()=>$('bs'),nx:1,c:g=>g.spd>1},
+{t:'⑦ <b>스킬</b> 3개(Q·W·E)는 위기 때 쓰는 비장의 수예요. 쿨타임이 있으니 아껴 쓰세요.',el:()=>document.querySelector('#hud>span:nth-of-type(2)'),nx:1},
+{t:'⑧ 맵 아이콘: 🛡 안에 놓으면 공격력↑ · 🚫 설치 불가 · 🐌 적 감속 · 🔥 적 가속. 타워의 ⓘ 버튼에서 상세 능력을 볼 수 있어요.',nx:1},
+{t:'🎉 준비 완료! 생명력(❤)이 0이 되면 패배예요. 이제 직접 막아보세요!',nx:1,last:1}];
+function tuAsk(){if(!tuGet())$('tupr').style.display='flex'}
+function tuNo(){$('tupr').style.display='none';tuSet('skip')}
+function tuStart(){if(G)return;if(loadSave()&&!confirm('진행 중인 게임이 있어요.\n튜토리얼을 시작하면 이어하기 기록이 사라져요. 시작할까요?'))return;$('tupr').style.display='none';tuSet('done');lobbyClose();tmFix();start(0,0);G.gold=Math.max(G.gold,900);TUT={on:1,i:0};tuShow()}
+function tuShow(){document.querySelectorAll('.tuhl').forEach(e=>e.classList.remove('tuhl'));const s=TUS[TUT.i];if(!s){tuEnd();return}
+const el=s.el&&s.el();if(el)el.classList.add('tuhl');$('tut').style.display='block';$('tutn').textContent='🎓 튜토리얼 '+(TUT.i+1)+'/'+TUS.length;$('tutx').innerHTML=s.t;
+$('tutnx').style.display=s.nx?'':'none';$('tutnx').textContent=s.last?'시작하기 ▶':'다음 ▶';$('tuth').style.display=s.nx?'none':''}
+function tuNext(){TUT.i++;tuShow()}
+function tuEnd(){TUT.on=0;document.querySelectorAll('.tuhl').forEach(e=>e.classList.remove('tuhl'));$('tut').style.display='none'}
+function tuSkip(){tuEnd()}
+function tuTick(){if(!G||G.over){tuEnd();return}const s=TUS[TUT.i];if(s&&s.c&&s.c(G))tuNext()}
+
+// ---------- 진행 중 게임 이어하기 (자동 저장) ----------
+const SVK='phd6g',SKIP=new Set(['bg','P','z','bmc','bmk','en','pr','fx','tx','st','sel','po','pk','pause','run','over','win','wv','hm','warn','shake','flash','frz','ov','spd','mi','di','dx','nx','q','cards','hs']);
+const hasDom=(x,d=0)=>!!x&&d<3&&(x instanceof Node||(typeof x==='object'&&Object.values(x).some(y=>hasDom(y,d+1))));
+let RES=0,lastSnap=0;
+function snapSave(){const g=G;if(!g||g.over||g.wv||g.pk||g.en.length||(!g.wave&&!g.tw.length))return;
+try{const o={};for(const k of Object.keys(g))if(!SKIP.has(k)&&typeof g[k]!=='function'&&!hasDom(g[k]))o[k]=g[k];localStorage.setItem(SVK,JSON.stringify({v:1,t:Date.now(),mi:g.mi,di:g.di,dx:g.dx||null,g:o}))}catch(e){}}
+function loadSave(){try{const d=JSON.parse(localStorage.getItem(SVK)||'null');if(d&&d.v===1&&MAPS[d.mi]&&d.g&&Array.isArray(d.g.tw)&&d.g.tw.every(t=>T[t.id]))return d}catch(e){}return null}
+function clearSave(){try{localStorage.removeItem(SVK)}catch(e){}}
+function resumeGame(){const d=loadSave();if(!d||G)return;RES=1;try{start(d.mi,d.di,d.dx||undefined)}finally{RES=0}
+Object.assign(G,d.g);G.q=[];G.en=[];G.wv=0;G.pause=0;G.run=1;G.over=0;G.spd=1;G.nx=G.auto?60:0;$('ba').textContent=G.auto?'🔁 자동':'🔁 수동';$('bs').textContent='⏩ 1x';toast('▶ 이어하기: 웨이브 '+(G.wave+1)+' 시작 전')}
+function rsmRender(){const e=$('rsm'),d=loadSave();if(!e)return;if(!d||G){e.innerHTML='';return}
+const D=d.dx||DF[d.di]||{n:'STAGE'},g=d.g,m=Math.max(1,Math.round((Date.now()-d.t)/60000)),ago=m<60?m+'분 전':m<1440?Math.round(m/60)+'시간 전':Math.round(m/1440)+'일 전';
+e.innerHTML=`<div class="rsc"><div><b>▶ 이어하기</b> · ${D.n} · ${MAPS[d.mi].n}<br><small>웨이브 ${g.wave}/${g.maxW>99?'∞':g.maxW} 클리어 · 타워 ${g.tw.length}개 · $${Math.floor(g.gold)} · ❤${g.lives} · ${ago} 저장<br>다음 웨이브 시작 전 상태로 돌아가요</small></div><div style="display:flex"><button onclick="resumeGame()">▶ 이어하기</button><button class="alt" onclick="rsmDel()" title="기록 삭제">🗑</button></div></div>`}
+function rsmDel(){if(confirm('저장된 진행 기록을 삭제할까요?')){clearSave();rsmRender()}}
+addEventListener('pagehide',snapSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)snapSave()});
+
+// ---------- 백업 · 복원 (파일 / 코드) ----------
+const SKY=['phd6a','phd6b','phd6m','phd6p','phd6d','phd6u','phd6x','phd6t','phd6e','phd6g','phd6tu'];
+const jp=v=>{try{return JSON.parse(v)}catch(e){return undefined}};
+const isObj=v=>{const o=jp(v);return !!o&&typeof o==='object'&&!Array.isArray(o)};
+const isNums=v=>{const o=jp(v);return Array.isArray(o)&&o.length<=100&&o.every(Number.isFinite)};
+const SKV={phd6a:isObj,phd6b:isObj,phd6m:isObj,phd6x:isObj,phd6u:isNums,phd6t:isNums,phd6d:v=>/^[\d-]{0,12}$/.test(v),phd6p:v=>/^\d{1,12}(\.\d+)?$/.test(v),phd6e:v=>v==='0'||v==='1',phd6tu:v=>v==='done'||v==='skip',phd6g:v=>{const o=jp(v);return !!o&&o.v===1}};
+function bkPack(){const d={};SKY.forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)d[k]=v}catch(e){}});return{v:2,t:Date.now(),d}}
+function bkParse(txt){txt=String(txt||'').trim();let o=jp(txt);if(o===undefined){try{o=jp(decodeURIComponent(escape(atob(txt))))}catch(e){}}
+if(!o||typeof o!=='object')return null;const src=o.v===2&&o.d&&typeof o.d==='object'?o.d:o,d={};let n=0;
+SKY.forEach(k=>{const v=src[k];if(typeof v==='string'&&v.length<500000&&SKV[k](v)){d[k]=v;n++}});return n?{t:+o.t||0,d}:null}
+function bkSummary(r){const b=jp(r.d.phd6b)||{},st=Object.keys(b).filter(k=>b[k]>0).length;return(r.t?new Date(r.t).toLocaleString('ko-KR')+' 저장본\n':'')+`클리어/기록 스테이지 ${st}개 · 방역 포인트 ${r.d.phd6p||0}`+(r.d.phd6g?' · 이어하기 기록 포함':'')}
+function bkApply(r){if(!confirm(bkSummary(r)+'\n\n⚠ 이 기기의 현재 기록이 덮어써져요.\n불러올까요?'))return;
+SKY.forEach(k=>{try{if(r.d[k]!=null)localStorage.setItem(k,r.d[k])}catch(e){}});alert('불러오기 완료! 새로고침합니다.');location.reload()}
+function bkMark(){try{localStorage.setItem('phd6bk',String(Date.now()))}catch(e){}bkLbl()}
+async function expFile(){const j=JSON.stringify(bkPack()),name='phd-defense-save-'+new Date().toISOString().slice(0,10)+'.json';
+try{const f=new File([j],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'PHD: DEFENSE 저장 파일'});bkMark();bkOpen();return}}catch(e){if(e&&e.name==='AbortError')return}
+const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);bkMark();bkOpen()}
+function impFile(){const i=document.createElement('input');i.type='file';i.accept='.json,application/json,text/plain';i.onchange=async()=>{const f=i.files&&i.files[0];if(!f)return;if(f.size>2e6){alert('파일이 너무 커요. 저장 파일이 맞는지 확인해 주세요.');return}
+const r=bkParse(await f.text());if(!r){alert('올바른 저장 파일이 아니에요.');return}bkApply(r)};i.click()}
+function expSave(){const c=btoa(unescape(encodeURIComponent(JSON.stringify(bkPack()))));bkMark();(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>alert('저장 코드가 복사되었습니다.\n다른 기기에서 [코드 붙여넣기]에 붙여넣으세요.')).catch(()=>prompt('이 코드를 복사해서 보관하세요',c))}
+function impSave(){const c=prompt('저장 코드를 붙여넣으세요');if(!c)return;const r=bkParse(c);if(!r){alert('올바르지 않은 저장 코드입니다.');return}bkApply(r)}
+function bkLast(){try{return +localStorage.getItem('phd6bk')||0}catch(e){return 0}}
+function bkLbl(){const b=$('bkb');if(!b)return;const has=Object.keys(BS).length>0||RP>0,old=Date.now()-bkLast()>7*864e5;b.textContent='💾 백업·복원'+(has&&old?' ❗':'')}
+function bkOpen(){if(G)return;infoOpen();const t=bkLast();
+$('inb').innerHTML=`<h2>💾 백업 · 복원</h2><div class="bx">이 기기의 기록(스테이지 진행, 연구, 업적, 팀 편성, 이어하기)을 <b>파일</b>로 저장해 다른 기기로 옮기거나 보관할 수 있어요.<br>파일은 AirDrop · 카카오톡 “나에게 보내기” · 이메일 등으로 옮기세요.</div>
+<div class="sec">마지막 백업: ${t?new Date(t).toLocaleString('ko-KR'):'없음'}</div>
+<div class="row"><button onclick="expFile()">📤 파일로 저장</button><button onclick="impFile()">📥 파일에서 불러오기</button></div>
+<div class="sec">파일이 어려우면 (코드)</div><div class="row"><button class="alt" onclick="expSave()">📋 코드 복사</button><button class="alt" onclick="impSave()">📋 코드 붙여넣기</button></div>
+<div class="d">⚠ 불러오면 이 기기의 현재 기록이 덮어써져요. Safari는 오래 방문하지 않으면 저장 데이터를 지울 수 있으니, 가끔 파일로 백업해 두세요.</div>
+<div class="ft"><button class="alt" onclick="infoClose()">닫기</button></div>`}
 showTitle();icLoop();requestAnimationFrame(loop);
 </script></body></html>
